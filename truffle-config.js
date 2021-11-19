@@ -113,4 +113,19 @@ module.exports = {
     //   }
     // }
   // }
+
+  db: {
+    enabled: false
+  },
+  compilers: {
+    solc: {
+      settings: {
+        evmVersion: "byzantium",
+        optimizer: { enabled: true, runs: 200 },
+      },     
+      version: "^0.6.0",
+      docker: false,
+      parser: "solcjs",
+    }
+  }
 };
