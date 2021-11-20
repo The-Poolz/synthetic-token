@@ -27,8 +27,7 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable {
     }
 
     function ActivateBeacon(bytes calldata _Address) external {
-        burn(balanceOf(_msgSender()));
-        emit Becon(_Address, balanceOf(_msgSender()));
+        ActivateBeacon(_Address,balanceOf(_msgSender()));
     }
 
     function ActivateBeacon(bytes calldata _Address, uint256 _Amount) external {
