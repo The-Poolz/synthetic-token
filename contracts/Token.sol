@@ -13,8 +13,6 @@ import "poolz-helper/contracts/ILockedDeal.sol";
 contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
     // uint256 _cap = 2000000 * 10**18;\
 
-    event Becon(bytes Address, uint256 Amount);
-
     constructor(string memory _name, string memory _symbol, uint _cap, uint8 _decimals, address _owner)
         public
         ERC20(_name, _symbol)
