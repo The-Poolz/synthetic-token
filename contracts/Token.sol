@@ -31,15 +31,6 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         super._beforeTokenTransfer(from, to, amount); // Call parent hook
     }
 
-    function ActivateBeacon(bytes calldata _Address) external {
-        ActivateBeacon(_Address,balanceOf(_msgSender()));
-    }
-
-    function ActivateBeacon(bytes memory _Address, uint256 _Amount) public {
-        burn(_Amount);
-        emit Becon(_Address, _Amount);
-    }
-
     function ActivateSynthetic() external {
         require(totalUnlocks != 0, "Original Token not Ready");
         for(uint8 i=0 ; i<totalUnlocks ; i++){
