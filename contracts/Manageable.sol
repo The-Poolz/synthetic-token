@@ -23,12 +23,12 @@ contract Manageable is ERC20Helper, GovManager{
     uint8 public totalUnlocks;
     uint public totalOfRatios;
 
-    function SetLockingDetails(
+    function _SetLockingDetails(
         address _tokenAddress,
         uint256 _amount,
-        uint64[] calldata _unlockTimes,
-        uint8[] calldata _ratios
-    ) external onlyOwnerOrGov {
+        uint64[] memory _unlockTimes,
+        uint8[] memory _ratios
+    ) internal {
         require(_unlockTimes.length == _ratios.length, "Both arrays should have same length.");
         require(_unlockTimes.length > 0, "Array length should be greater than 0");
         require(totalUnlocks == 0, "Unlock Data Already Present");
