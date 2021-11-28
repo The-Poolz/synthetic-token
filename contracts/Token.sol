@@ -52,7 +52,7 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
     }
 
     function getActivationResult(uint _amountToActivate) public view returns(
-        uint TotalTokens;
+        uint TotalTokens,
         uint CreditableAmount, 
         uint64[] memory unlockTimes, 
         uint256[] memory unlockAmounts
