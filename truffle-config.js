@@ -117,6 +117,7 @@ module.exports = {
   db: {
     enabled: false
   },
+  plugins: ["solidity-coverage"],
   compilers: {
     solc: {
       settings: {
