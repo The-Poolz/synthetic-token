@@ -18,8 +18,16 @@ matrix:
       - rm -rf node_modules
 
 install:
-  - bash ./bin/travis-install.sh
+- npm install
+- npm install -g ganache-cli truffle
 script:
-  - bash ./bin/test.sh
+- set -e
+- ganache-cli --gasLimit 7721975 2> /dev/null 1> /dev/null &
+- sleep 5 # to make sure ganache-cli is up and running before compiling
+- rm -rf build
+- truffle compile
+- truffle migrate --reset --network development
+- truffle test
+- kill -9 $(lsof -t -i:8545)
 after_script:
  - bash <(curl -s https://codecov.io/bash)
