@@ -43,29 +43,26 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
 
     function ActivateSynthetic(uint _amountToActivate) public {
         require(totalUnlocks != 0, "Original Token not Ready");
-        require(_amountToActivate <= balanceOf(_msgSender()), "Amount greater than balance");
-        uint amountToBurn;
-        (uint CreditableAmount, uint64[] memory unlockTimes, uint256[] memory unlockAmounts) = getActivationResult(_amountToActivate);
+        (uint amountToBurn, uint CreditableAmount, uint64[] memory unlockTimes, uint256[] memory unlockAmounts) = getActivationResult(_amountToActivate);
         TransferToken(OriginalTokenAddress, _msgSender(), CreditableAmount);
-        amountToBurn = amountToBurn + CreditableAmount;
         for(uint8 i=0 ; i<unlockTimes.length ; i++){
-            ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockAmounts[i], _msgSender());
-            amountToBurn = amountToBurn + unlockAmounts[i];
+            ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockAmounts[i], _msgSender());         
         }
-        burn(amountToBurn);
-        assert(amountToBurn == _amountToActivate);
+        burn(amountToBurn);   // here will be check for balance     
     }
 
     function getActivationResult(uint _amountToActivate) public view returns(
+        uint TotalTokens;
         uint CreditableAmount, 
         uint64[] memory unlockTimes, 
         uint256[] memory unlockAmounts
     ) {
-        for(uint8 i=0 ; i<totalUnlocks ; i++){
+        for(uint8 i=0 ; i<totalUnlocks ; i++){        
             uint amount = SafeMath.div(
                 SafeMath.mul( _amountToActivate, LockDetails[i].ratio ),
                 totalOfRatios
             );
+            TotalTokens = TotalTokens + amount;
             if(LockDetails[i].unlockTime <= now){
                 CreditableAmount = CreditableAmount + amount;
             } else {
