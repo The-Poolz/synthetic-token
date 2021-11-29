@@ -13,8 +13,6 @@ import "poolz-helper/contracts/ILockedDeal.sol";
 contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
     // uint256 _cap = 2000000 * 10**18;\
 
-    event Becon(bytes Address, uint256 Amount);
-
     constructor(string memory _name, string memory _symbol, uint _cap, uint8 _decimals, address _owner)
         public
         ERC20(_name, _symbol)
@@ -31,18 +29,45 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         super._beforeTokenTransfer(from, to, amount); // Call parent hook
     }
 
+    function SetLockingDetails(
+        address _tokenAddress,
+        uint64[] calldata _unlockTimes,
+        uint8[] calldata _ratios
+    ) external onlyOwnerOrGov  {
+        _SetLockingDetails(_tokenAddress, cap(), _unlockTimes, _ratios);
+    }
+
     function ActivateSynthetic() external {
+        ActivateSynthetic(balanceOf(_msgSender()));
+    }
+
+    function ActivateSynthetic(uint _amountToActivate) public {
         require(totalUnlocks != 0, "Original Token not Ready");
-        for(uint8 i=0 ; i<totalUnlocks ; i++){
+        (uint amountToBurn, uint CreditableAmount, uint64[] memory unlockTimes, uint256[] memory unlockAmounts) = getActivationResult(_amountToActivate);
+        TransferToken(OriginalTokenAddress, _msgSender(), CreditableAmount);
+        for(uint8 i=0 ; i<unlockTimes.length ; i++){
+            ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockAmounts[i], _msgSender());         
+        }
+        burn(amountToBurn);   // here will be check for balance     
+    }
+
+    function getActivationResult(uint _amountToActivate) public view returns(
+        uint TotalTokens,
+        uint CreditableAmount, 
+        uint64[] memory unlockTimes, 
+        uint256[] memory unlockAmounts
+    ) {
+        for(uint8 i=0 ; i<totalUnlocks ; i++){        
             uint amount = SafeMath.div(
-                SafeMath.mul( balanceOf(_msgSender()), LockDetails[i].ratio ),
+                SafeMath.mul( _amountToActivate, LockDetails[i].ratio ),
                 totalOfRatios
             );
-            burn(amount);
+            TotalTokens = TotalTokens + amount;
             if(LockDetails[i].unlockTime <= now){
-                TransferToken(OriginalTokenAddress, _msgSender(), amount );
+                CreditableAmount = CreditableAmount + amount;
             } else {
-                ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, LockDetails[i].unlockTime, amount, _msgSender());
+                unlockTimes[i] = LockDetails[i].unlockTime;
+                unlockAmounts[i] = amount;
             }
         }
     }
