@@ -11,13 +11,14 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable {
 
     event Becon(bytes Address, uint256 Amount);
 
-    constructor(string memory _name, string memory _symbol, uint _cap, address _owner)
+    constructor(string memory _name, string memory _symbol, uint _cap, uint8 _decimals, address _owner)
         public
         ERC20(_name, _symbol)
-        ERC20Capped(_cap * 10**18)
+        ERC20Capped(_cap * 10**uint(_decimals))
     {
-        _setupDecimals(18);
-        _mint(_owner, _cap * 10**18);
+        require(_decimals <= 18, "Decimals more than 18");
+        _setupDecimals(_decimals);
+        _mint(_owner, _cap * 10**uint(_decimals));
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)

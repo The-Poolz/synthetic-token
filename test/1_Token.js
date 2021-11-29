@@ -10,12 +10,15 @@ contract("Testing Synthetic Token", accounts => {
         const tokenName = "REAL Synthetic"
         const tokenSymbol = "~REAL Poolz"
         const cap = new BigNumber(20000)
-        token = await Token.new(tokenName, tokenSymbol, cap.toString(), firstAddress, {from: firstAddress})
+        const _decimals = '18'
+        token = await Token.new(tokenName, tokenSymbol, cap.toString(), _decimals, firstAddress, {from: firstAddress})
         const name = await token.name()
         const symbol = await token.symbol()
         const firstBalance = await token.balanceOf(firstAddress)
+        const decimals = await token.decimals()
         assert.equal(tokenName, name)
         assert.equal(tokenSymbol, symbol)
+        assert.equal(decimals.toString(), _decimals)
         assert.equal(firstBalance.toString(), cap.multiply(10 ** 18).toString())
     })
 
