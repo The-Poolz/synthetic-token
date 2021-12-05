@@ -45,30 +45,51 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         require(totalUnlocks != 0, "Original Token not Ready");
         (uint amountToBurn, uint CreditableAmount, uint64[] memory unlockTimes, uint256[] memory unlockAmounts) = getActivationResult(_amountToActivate);
         TransferToken(OriginalTokenAddress, _msgSender(), CreditableAmount);
-        for(uint8 i=0 ; i<unlockTimes.length ; i++){
-            ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockAmounts[i], _msgSender());         
+        if(SafeMath.sub(amountToBurn, CreditableAmount) > 0){
+            ApproveAllowanceERC20(OriginalTokenAddress, LockedDealAddress, SafeMath.sub(amountToBurn, CreditableAmount));
+            for(uint8 i=0 ; i<unlockTimes.length ; i++){
+                if(unlockAmounts[i] > 0){
+                    ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockAmounts[i], _msgSender());         
+                }
+            }
         }
         burn(amountToBurn);   // here will be check for balance     
+        require(amountToBurn == _amountToActivate, "Amount Invalid");
     }
 
-    function getActivationResult(uint _amountToActivate) public view returns(
-        uint TotalTokens,
-        uint CreditableAmount, 
-        uint64[] memory unlockTimes, 
-        uint256[] memory unlockAmounts
-    ) {
-        for(uint8 i=0 ; i<totalUnlocks ; i++){        
+    function getActivationResult(uint _amountToActivate) public view returns(uint, uint, uint64[] memory, uint256[] memory) {
+        uint TotalTokens;
+        uint CreditableAmount; 
+        uint64[] memory unlockTimes = new uint64[](totalUnlocks);
+        uint256[] memory unlockAmounts = new uint256[](totalUnlocks);
+
+        for(uint8 i=0 ; i<totalUnlocks ; i++){
             uint amount = SafeMath.div(
                 SafeMath.mul( _amountToActivate, LockDetails[i].ratio ),
                 totalOfRatios
             );
-            TotalTokens = TotalTokens + amount;
+            TotalTokens = SafeMath.add(TotalTokens, amount);
             if(LockDetails[i].unlockTime <= now){
-                CreditableAmount = CreditableAmount + amount;
+                CreditableAmount = SafeMath.add(CreditableAmount, amount);
             } else {
                 unlockTimes[i] = LockDetails[i].unlockTime;
                 unlockAmounts[i] = amount;
             }
         }
+        if(TotalTokens < _amountToActivate){
+            uint difference = SafeMath.sub(_amountToActivate, TotalTokens);
+            for(uint8 i=totalUnlocks - 1; i >= 0 ; i--){
+                if(unlockAmounts[i] > 0){
+                    unlockAmounts[i] = SafeMath.add(unlockAmounts[i], difference);
+                    break;
+                }
+            }
+            if(unlockAmounts[0] == 0){
+                CreditableAmount = SafeMath.add(CreditableAmount, difference);
+            }
+            TotalTokens = _amountToActivate;
+        }
+        
+        return(TotalTokens, CreditableAmount, unlockTimes, unlockAmounts);
     }
 }
