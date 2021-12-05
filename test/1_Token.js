@@ -1,5 +1,5 @@
 const Token = artifacts.require("POOLZSYNT")
-const TestToken = artifacts.require("Token");
+const TestToken = artifacts.require("OriginalToken");
 const { assert } = require('chai');
 const truffleAssert = require('truffle-assertions');
 const BigNumber = require("big-number")

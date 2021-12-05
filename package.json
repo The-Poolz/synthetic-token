@@ -26,8 +26,8 @@
     "solidity-coverage": "^0.7.11",
     "truffle-plugin-verify": "^0.5.7"
   },
-  "name": "synthetic-token",
-  "version": "1.0.0",
+  "name": "poolz-envelop-token",
+  "version": "1.0.1",
   "description": "",
   "main": "truffle-config.js",
   "directories": {
