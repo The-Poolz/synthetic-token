@@ -62,6 +62,7 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         uint CreditableAmount; 
         uint64[] memory unlockTimes = new uint64[](totalUnlocks);
         uint256[] memory unlockAmounts = new uint256[](totalUnlocks);
+        uint8 iterator;
 
         for(uint8 i=0 ; i<totalUnlocks ; i++){
             uint amount = SafeMath.div(
@@ -72,8 +73,9 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
             if(LockDetails[i].unlockTime <= now){
                 CreditableAmount = SafeMath.add(CreditableAmount, amount);
             } else {
-                unlockTimes[i] = LockDetails[i].unlockTime;
-                unlockAmounts[i] = amount;
+                unlockTimes[iterator] = LockDetails[i].unlockTime;
+                unlockAmounts[iterator] = amount;
+                iterator++;
             }
         }
         if(TotalTokens < _amountToActivate){
