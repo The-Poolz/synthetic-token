@@ -80,14 +80,15 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         }
         if(TotalTokens < _amountToActivate){
             uint difference = SafeMath.sub(_amountToActivate, TotalTokens);
-            for(uint8 i=totalUnlocks - 1; i >= 0 ; i--){
-                if(unlockAmounts[i] > 0){
-                    unlockAmounts[i] = SafeMath.add(unlockAmounts[i], difference);
-                    break;
-                }
-            }
             if(unlockAmounts[0] == 0){
                 CreditableAmount = SafeMath.add(CreditableAmount, difference);
+            } else {
+                for(uint8 i=totalUnlocks - 1; i >= 0 ; i--){
+                    if(unlockAmounts[i] > 0){
+                        unlockAmounts[i] = SafeMath.add(unlockAmounts[i], difference);
+                        break;
+                    }
+                }
             }
             TotalTokens = _amountToActivate;
         }
