@@ -2,7 +2,8 @@ const Token = artifacts.require("POOLZSYNT")
 const TestToken = artifacts.require("OriginalToken");
 const { assert } = require('chai');
 const truffleAssert = require('truffle-assertions');
-const BigNumber = require("big-number")
+const BigNumber = require("bignumber.js")
+BigNumber.config({ EXPONENTIAL_AT: 1e+9 })
 
 contract("Testing Synthetic Token", accounts => {
     let token, originalToken, firstAddress = accounts[0]
@@ -31,11 +32,11 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(tokenName, name)
         assert.equal(tokenSymbol, symbol)
         assert.equal(decimals.toString(), _decimals)
-        assert.equal(firstBalance.toString(), cap.multiply(10 ** 18).toString())
+        assert.equal(firstBalance.toString(), cap.multipliedBy(10 ** 18).toString())
     })
 
     it('should set locking details', async () => {
-        await originalToken.approve(token.address, cap.toString(), {from: firstAddress})
+        await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), {from: firstAddress})
         const approval = await originalToken.allowance(firstAddress, token.address)
         const balance = await originalToken.balanceOf(firstAddress)
         const tx = await token.SetLockingDetails(originalToken.address, timestamps, ratios, {from: firstAddress})
