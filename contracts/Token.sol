@@ -11,7 +11,7 @@ import "poolz-helper/contracts/ERC20Helper.sol";
 import "poolz-helper/contracts/ILockedDeal.sol";
 
 contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
-    // uint256 _cap = 2000000 * 10**18;\
+    event TokenActivated(address Owner, uint256 Amount);
 
     constructor(string memory _name, string memory _symbol, uint _cap, uint8 _decimals, address _owner)
         public
@@ -53,8 +53,9 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
                 }
             }
         }
-        burn(amountToBurn);   // here will be check for balance     
-        require(amountToBurn == _amountToActivate, "Amount Invalid");
+        burn(amountToBurn);   // here will be check for balance
+        emit TokenActivated(_msgSender(), amountToBurn);
+        assert(amountToBurn == _amountToActivate);
     }
 
     function getActivationResult(uint _amountToActivate) public view returns(uint, uint, uint64[] memory, uint256[] memory) {
