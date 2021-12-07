@@ -62,4 +62,17 @@ contract("Testing Synthetic Token", accounts => {
             assert.equal(details.ratio.toString(), ratios[i].toString())
         }
     })
+
+    it('get activation result', async () => {
+        const balance = await token.balanceOf(firstAddress)
+        const result = await token.getActivationResult(balance)
+        const totalOfRatios = parseInt(await token.totalOfRatios())
+        
+        assert.equal(result[0].toString(), balance)
+        assert.equal(result[1], 0)
+        assert.equal(result[2].toString(), timestamps.toString())
+        assert.equal(result[3][0], balance/totalOfRatios)
+        assert.equal(result[3][1], balance/totalOfRatios)
+        assert.equal(result[3][2], balance/totalOfRatios + 1)
+    })
 })
