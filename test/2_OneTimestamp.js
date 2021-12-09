@@ -15,12 +15,12 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         token = await Token.new("REAL Synthetic", "~REAL Poolz", cap.toString(), '18', firstAddress, { from: firstAddress })
         const now = new Date()
         timestamp.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
-    })
-
-    it('get activation result with one timestamp', async () => {
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
         await originalToken.allowance(firstAddress, token.address)
         await token.SetLockingDetails(originalToken.address, timestamp, ratio, { from: firstAddress })
+    })
+
+    it('get activation result with one timestamp', async () => {
         const balance = await token.balanceOf(firstAddress)
         const result = await token.getActivationResult(balance)
         assert.equal(result[0].toString(), balance, 'check total tokens')
@@ -54,11 +54,4 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         assert.equal(result[2][0].toString(), timestamp.toString(), 'check unlock times')
         assert.equal(result[3].toString(), 0, 'check unlock amount')
     })
-
-    // it('activate synthetic', async () => {
-    //     //console.log((await token.OriginalTokenAddress()))
-    //     await token.SetLockedDealAddress(accounts[1])
-    //     const balance = await token.balanceOf(firstAddress)
-    //     await token.ActivateSynthetic(balance)
-    // })
 })
