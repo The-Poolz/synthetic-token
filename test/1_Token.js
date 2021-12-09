@@ -75,22 +75,4 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(result[3][1], balance / totalOfRatios, 'check second unlock amount')
         assert.equal(result[3][2], balance / totalOfRatios + 1, 'check third unlock amount')
     })
-
-    it('should revert transaction', async () => {
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [], [1], { from: firstAddress }),
-            'Both arrays should have same length')
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [], [], { from: firstAddress }),
-            'Array length should be greater than 0')
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress }),
-            'Unlock Data Already Present')
-    })
-
-    it('should set locked deal address', async () => {
-        const lockedDealAddress = accounts[1]
-        const previousAddress = await token.LockedDealAddress()
-        await token.SetLockedDealAddress(lockedDealAddress)
-        const newLockedDealAddress = await token.LockedDealAddress()
-        assert.equal(newLockedDealAddress, lockedDealAddress, 'check locked deal adress')
-        assert.notEqual(previousAddress, newLockedDealAddress)
-    })
 })
