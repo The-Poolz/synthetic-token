@@ -29,7 +29,7 @@
     "truffle-plugin-verify": "^0.5.7"
   },
   "name": "poolz-envelop-token",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "",
   "main": "truffle-config.js",
   "directories": {
