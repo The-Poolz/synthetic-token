@@ -76,7 +76,7 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(result[3][2], balance / totalOfRatios + 1, 'check third unlock amount')
     })
 
-    it('using get activation when tokens less than time stamps', async () => {
+    it('testing get activation when tokens less than time stamps', async () => {
         const result = await token.getActivationResult(2)
         assert.equal(result[0].toString(), 2, 'check total tokens')
         assert.equal(result[1], 2, 'check creditable amount')

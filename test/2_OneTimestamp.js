@@ -1,7 +1,8 @@
 const Token = artifacts.require("POOLZSYNT")
 const TestToken = artifacts.require("OriginalToken");
 const { assert } = require('chai');
-const BigNumber = require("bignumber.js")
+const BigNumber = require("bignumber.js");
+const truffleAssertions = require('truffle-assertions');
 BigNumber.config({ EXPONENTIAL_AT: 1e+9 })
 
 contract("Testing Synthetic Token with one timestamp", accounts => {
@@ -29,7 +30,7 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         assert.equal(result[3][0].toString(), balance, 'check unlock amount')
     })
 
-    it('using get activation in the future', async () => {
+    it('testing get activation in the past time', async () => {
         const secondAddress = accounts[1]
         const testToken = await TestToken.new('TEST', 'TEST', { from: secondAddress });
         const token = await Token.new('Token', 'SYMB', cap.toString(), '18', secondAddress, { from: secondAddress })
@@ -37,7 +38,7 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         await testToken.allowance(secondAddress, token.address, {from: secondAddress})
         const now = new Date()
         const pastTimestamp = []
-        pastTimestamp.push((now.setHours(now.getHours() - 12) / 1000).toFixed())
+        pastTimestamp.push((now.setHours(now.getHours() - 1) / 1000).toFixed())
         await token.SetLockingDetails(testToken.address, pastTimestamp, [1], { from: secondAddress })
         const balance = await token.balanceOf(secondAddress)
         const result = await token.getActivationResult(balance)
@@ -47,11 +48,17 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         assert.equal(result[3][0].toString(), 0, 'check unlock amount')
     })
 
-    it('using get activation with zero amount', async () => {
+    it('testing get activation with zero amount', async () => {
         const result = await token.getActivationResult(0)
         assert.equal(result[0].toString(), 0, 'check total tokens')
         assert.equal(result[1].toString(), 0, 'check creditable amount')
         assert.equal(result[2][0].toString(), timestamp.toString(), 'check unlock times')
         assert.equal(result[3].toString(), 0, 'check unlock amount')
+    })
+
+    it('testing activate synthetic with zero amount', async () => {
+        const event = await token.ActivateSynthetic(0)
+        assert.equal(event.logs[3].args.Owner, firstAddress)
+        assert.equal(event.logs[3].args.Amount, 0)
     })
 })
