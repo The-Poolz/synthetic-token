@@ -9,8 +9,8 @@ contract("Testing Synthetic Token", accounts => {
     let token, originalToken, firstAddress = accounts[0]
     const cap = new BigNumber(10000)
     const timestamps = []
-    const ratios = [1,1,1]
-    
+    const ratios = [1, 1, 1]
+
     before(async () => {
         originalToken = await TestToken.new('OrgToken', 'ORGT');
         const now = new Date()
@@ -23,7 +23,7 @@ contract("Testing Synthetic Token", accounts => {
         const tokenName = "REAL Synthetic"
         const tokenSymbol = "~REAL Poolz"
         const _decimals = '18';
-        token = await Token.new(tokenName, tokenSymbol, cap.toString(), _decimals ,firstAddress, {from: firstAddress})
+        token = await Token.new(tokenName, tokenSymbol, cap.toString(), _decimals, firstAddress, { from: firstAddress })
         const name = await token.name()
         const symbol = await token.symbol()
         const firstBalance = await token.balanceOf(firstAddress)
@@ -36,10 +36,10 @@ contract("Testing Synthetic Token", accounts => {
     })
 
     it('should set locking details', async () => {
-        await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), {from: firstAddress})
+        await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
         const approval = await originalToken.allowance(firstAddress, token.address)
         const balance = await originalToken.balanceOf(firstAddress)
-        const tx = await token.SetLockingDetails(originalToken.address, timestamps, ratios, {from: firstAddress})
+        const tx = await token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress })
         const originalAddress = tx.logs[3].args.TokenAddress
         const totalAmount = tx.logs[3].args.Amount
         const totalUnlocks = tx.logs[3].args.TotalUnlocks
@@ -57,10 +57,32 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(orgToken, originalToken.address)
         assert.equal(totalUnlocks, timestamps.length)
         assert.equal(ratioTotal, totalRatios)
-        for(let i=0 ; i<totalUnlocks ; i++){
+        for (let i = 0; i < totalUnlocks; i++) {
             const details = await token.LockDetails(i)
             assert.equal(details.unlockTime.toString(), timestamps[i].toString())
             assert.equal(details.ratio.toString(), ratios[i].toString())
         }
+    })
+
+    it('get activation result', async () => {
+        const balance = await token.balanceOf(firstAddress)
+        const result = await token.getActivationResult(balance)
+        const totalOfRatios = parseInt(await token.totalOfRatios())
+        assert.equal(result[0].toString(), balance, 'check total tokens')
+        assert.equal(result[1], 0, 'check creditable amount')
+        assert.equal(result[2].toString(), timestamps.toString(), 'check unlock times')
+        assert.equal(result[3][0], balance / totalOfRatios, 'check first unlock amount')
+        assert.equal(result[3][1], balance / totalOfRatios, 'check second unlock amount')
+        assert.equal(result[3][2], balance / totalOfRatios + 1, 'check third unlock amount')
+    })
+
+    it('testing get activation when tokens less than time stamps', async () => {
+        const result = await token.getActivationResult(2)
+        assert.equal(result[0].toString(), 2, 'check total tokens')
+        assert.equal(result[1], 2, 'check creditable amount')
+        assert.equal(result[2].toString(), timestamps, 'check unlock times')
+        assert.equal(result[3][0], 0, 'check first unlock amount')
+        assert.equal(result[3][1], 0, 'check second unlock amount')
+        assert.equal(result[3][2], 0, 'check third unlock amount')
     })
 })
