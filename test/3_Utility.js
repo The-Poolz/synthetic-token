@@ -19,16 +19,20 @@ contract("Testing secondary functions", accounts => {
         timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
         token = await Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '18', firstAddress, { from: firstAddress })
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
-        await token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress })
     })
 
-    it('should revert transactions', async () => {
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [], [1], { from: firstAddress }),
-            'Both arrays should have same length')
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [], [], { from: firstAddress }),
-            'Array length should be greater than 0')
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress }),
-            'Unlock Data Already Present')
+    it('Unlock Data Already Present', async () => {
+        await token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress })
+        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress }))
+    })
+
+    it('Both arrays should have same length', async ()=> {
+        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1], [1, 1], { from: firstAddress }))
+        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1, 1], [1], { from: firstAddress }))
+    })
+
+    it('Array length should be greater than 0', async () => {
+        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [], [], { from: firstAddress }))
     })
 
     it('should set locked deal address', async () => {

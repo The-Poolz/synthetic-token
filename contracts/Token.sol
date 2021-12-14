@@ -13,11 +13,6 @@ import "poolz-helper/contracts/ILockedDeal.sol";
 contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
     event TokenActivated(address Owner, uint256 Amount);
 
-    modifier tokenIsReady{
-        require(totalUnlocks != 0, "Original Token not Ready");
-        _;
-    }
-
     constructor(string memory _name, string memory _symbol, uint _cap, uint8 _decimals, address _owner)
         public
         ERC20(_name, _symbol)
