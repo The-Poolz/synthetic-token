@@ -28,7 +28,6 @@ contract("Testing Synthetic Token", accounts => {
         const symbol = await token.symbol()
         const firstBalance = await token.balanceOf(firstAddress)
         const decimals = await token.decimals()
-        const capp = await token.cap()
         assert.equal(tokenName, name)
         assert.equal(tokenSymbol, symbol)
         assert.equal(decimals.toString(), _decimals)
@@ -37,8 +36,6 @@ contract("Testing Synthetic Token", accounts => {
 
     it('should set locking details', async () => {
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
-        const approval = await originalToken.allowance(firstAddress, token.address)
-        const balance = await originalToken.balanceOf(firstAddress)
         const tx = await token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress })
         const originalAddress = tx.logs[3].args.TokenAddress
         const totalAmount = tx.logs[3].args.Amount
@@ -84,5 +81,16 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(result[3][0], 0, 'check first unlock amount')
         assert.equal(result[3][1], 0, 'check second unlock amount')
         assert.equal(result[3][2], 0, 'check third unlock amount')
+    })
+
+    it('testing get activation when the blocking amount exceeds the activation amount', async ()=> {
+        const balance = BigNumber.sum((new BigNumber(1000).multipliedBy(10 ** 18)).toString(), -1)
+        const result = await token.getActivationResult(balance)
+        assert.equal(result[0].toString(), balance, 'check total tokens')
+        assert.equal(result[1].toString(), 0, 'check creditable amount')
+        assert.equal(result[2].toString(), timestamps.toString(), 'check unlock times')
+        assert.equal(result[3][0].toString(), balance.dividedBy(3).toString(), 'check first unlock amount')
+        assert.equal(result[3][1].toString(), balance.dividedBy(3).toString(), 'check second unlock amount')
+        assert.equal(result[3][2].toString(), balance.dividedBy(3).toString(), 'check third unlock amount')
     })
 })

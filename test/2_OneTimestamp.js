@@ -17,7 +17,6 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         const now = new Date()
         timestamp.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
-        await originalToken.allowance(firstAddress, token.address)
         await token.SetLockingDetails(originalToken.address, timestamp, ratio, { from: firstAddress })
     })
 
@@ -35,7 +34,6 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         const testToken = await TestToken.new('TEST', 'TEST', { from: secondAddress });
         const token = await Token.new('Token', 'SYMB', cap.toString(), '18', secondAddress, { from: secondAddress })
         await testToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: secondAddress })
-        await testToken.allowance(secondAddress, token.address, {from: secondAddress})
         const now = new Date()
         const pastTimestamp = []
         pastTimestamp.push((now.setHours(now.getHours() - 1) / 1000).toFixed())
@@ -60,5 +58,18 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         const event = await token.ActivateSynthetic(0)
         assert.equal(event.logs[3].args.Owner, firstAddress)
         assert.equal(event.logs[3].args.Amount, 0)
+    })
+
+    it('Original Token not Ready', async () => {
+        const thirdAddress = accounts[2]
+        const token = await Token.new('Token', 'SYMB', cap.toString(), '18', thirdAddress, { from: thirdAddress })
+        await truffleAssertions.reverts(token.ActivateSynthetic({from: thirdAddress}))
+    })
+
+    it('invalid getActivationResult(_amount) call', async () => {
+        const forthAddress = accounts[3]
+        const token = await Token.new('Token', 'SYMB', cap.toString(), '18', forthAddress, { from: forthAddress })
+        const balance = await token.balanceOf(forthAddress)
+        await truffleAssertions.reverts(token.getActivationResult(balance))
     })
 })

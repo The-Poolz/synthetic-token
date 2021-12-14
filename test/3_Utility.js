@@ -19,7 +19,6 @@ contract("Testing secondary functions", accounts => {
         timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
         token = await Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '18', firstAddress, { from: firstAddress })
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
-        await originalToken.allowance(firstAddress, token.address)
         await token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress })
     })
 
@@ -47,5 +46,9 @@ contract("Testing secondary functions", accounts => {
         const currentTotalSupply = await originalToken.totalSupply()
         assert.notEqual(previousTotalSupply, currentTotalSupply)
         assert.equal(currentTotalSupply, previousTotalSupply * 2)  
+    })
+
+    it('Decimal more than 18', async () => {
+        await truffleAssert.reverts(Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '19', firstAddress, { from: firstAddress }))
     })
 })
