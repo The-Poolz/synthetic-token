@@ -13,7 +13,7 @@ import "poolz-helper/contracts/ILockedDeal.sol";
 contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
     event TokenActivated(address Owner, uint256 Amount);
 
-    modifier tokenNotReady{
+    modifier tokenIsReady{
         require(totalUnlocks != 0, "Original Token not Ready");
         _;
     }
@@ -97,7 +97,6 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
             }
             TotalTokens = _amountToActivate;
         }
-        
         return(TotalTokens, CreditableAmount, unlockTimes, unlockAmounts);
     }
 }
