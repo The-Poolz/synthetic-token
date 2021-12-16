@@ -23,13 +23,8 @@ contract Manageable is ERC20Helper, GovManager{
     uint8 public totalUnlocks;
     uint public totalOfRatios;
 
-    modifier tokenIsReady {
-        require(totalUnlocks != 0, "Original Token not Ready");
-        _;
-    }
-
-    modifier tokenNotReady {
-        require(totalUnlocks == 0, "Unlock Data Already Present");
+    modifier tokenReady(bool status) {
+         require(status ? totalUnlocks != 0 : totalUnlocks == 0, "Unlock Data status error");
         _;
     }
 
@@ -38,7 +33,7 @@ contract Manageable is ERC20Helper, GovManager{
         uint256 _amount,
         uint64[] memory _unlockTimes,
         uint8[] memory _ratios
-    ) internal tokenNotReady {
+    ) internal tokenReady(false) {
         require(_unlockTimes.length == _ratios.length, "Both arrays should have same length.");
         require(_unlockTimes.length > 0, "Array length should be greater than 0");
         OriginalTokenAddress = _tokenAddress;
