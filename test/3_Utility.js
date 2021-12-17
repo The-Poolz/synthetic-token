@@ -53,6 +53,6 @@ contract("Testing secondary functions", accounts => {
     })
 
     it('Decimal more than 18', async () => {
-        await truffleAssert.reverts(Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '19', firstAddress, { from: firstAddress }))
+        await truffleAssert.reverts(Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '19', firstAddress, { from: firstAddress }), 'Decimal more than 18')
     })
 })
