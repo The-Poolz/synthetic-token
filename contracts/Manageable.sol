@@ -23,15 +23,19 @@ contract Manageable is ERC20Helper, GovManager{
     uint8 public totalUnlocks;
     uint public totalOfRatios;
 
+    modifier tokenReady(bool status) {
+         require(status ? totalUnlocks != 0 : totalUnlocks == 0, "Unlock Data status error");
+        _;
+    }
+
     function _SetLockingDetails(
         address _tokenAddress,
         uint256 _amount,
         uint64[] memory _unlockTimes,
         uint8[] memory _ratios
-    ) internal {
+    ) internal tokenReady(false) {
         require(_unlockTimes.length == _ratios.length, "Both arrays should have same length.");
         require(_unlockTimes.length > 0, "Array length should be greater than 0");
-        require(totalUnlocks == 0, "Unlock Data Already Present");
         OriginalTokenAddress = _tokenAddress;
         TransferInToken(_tokenAddress, msg.sender, _amount);
         for(uint8 i=0; i<_unlockTimes.length ; i++){

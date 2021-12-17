@@ -41,8 +41,7 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         ActivateSynthetic(balanceOf(_msgSender()));
     }
 
-    function ActivateSynthetic(uint _amountToActivate) public {
-        require(totalUnlocks != 0, "Original Token not Ready");
+    function ActivateSynthetic(uint _amountToActivate) public tokenReady(true) {
         (uint amountToBurn, uint CreditableAmount, uint64[] memory unlockTimes, uint256[] memory unlockAmounts) = getActivationResult(_amountToActivate);
         TransferToken(OriginalTokenAddress, _msgSender(), CreditableAmount);
         if(SafeMath.sub(amountToBurn, CreditableAmount) > 0){
@@ -58,7 +57,7 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         assert(amountToBurn == _amountToActivate);
     }
 
-    function getActivationResult(uint _amountToActivate) public view returns(uint, uint, uint64[] memory, uint256[] memory) {
+    function getActivationResult(uint _amountToActivate) public view tokenReady(true) returns(uint, uint, uint64[] memory, uint256[] memory)  {
         uint TotalTokens;
         uint CreditableAmount; 
         uint64[] memory unlockTimes = new uint64[](totalUnlocks);
@@ -93,7 +92,6 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
             }
             TotalTokens = _amountToActivate;
         }
-        
         return(TotalTokens, CreditableAmount, unlockTimes, unlockAmounts);
     }
 }
