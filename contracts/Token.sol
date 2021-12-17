@@ -13,28 +13,30 @@ import "poolz-helper/contracts/ILockedDeal.sol";
 contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
     event TokenActivated(address Owner, uint256 Amount);
 
-    constructor(string memory _name, string memory _symbol, uint _cap, uint8 _decimals, address _owner)
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint _cap,
+        uint8 _decimals,
+        address _owner,
+        address _originalTokenAddress,
+        uint64[] memory _unlockTimes,
+        uint8[] memory _ratios
+    )
         public
         ERC20(_name, _symbol)
         ERC20Capped(_cap * 10**uint(_decimals))
     {
         require(_decimals <= 18, "Decimal more than 18");
         _setupDecimals(_decimals);
-        _mint(_owner, _cap * 10**uint(_decimals));
+        _mint(_owner, cap());
+        _SetLockingDetails(_originalTokenAddress, cap(), _unlockTimes, _ratios);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal virtual override(ERC20Capped, ERC20)
     {
         super._beforeTokenTransfer(from, to, amount); // Call parent hook
-    }
-
-    function SetLockingDetails(
-        address _tokenAddress,
-        uint64[] calldata _unlockTimes,
-        uint8[] calldata _ratios
-    ) external onlyOwnerOrGov  {
-        _SetLockingDetails(_tokenAddress, cap(), _unlockTimes, _ratios);
     }
 
     function ActivateSynthetic() external {

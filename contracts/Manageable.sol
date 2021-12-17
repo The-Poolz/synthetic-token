@@ -24,7 +24,7 @@ contract Manageable is ERC20Helper, GovManager{
     uint public totalOfRatios;
 
     modifier tokenReady(bool status) {
-         require(status ? totalUnlocks != 0 : totalUnlocks == 0, "Unlock Data status error");
+        require(status ? totalUnlocks != 0 : totalUnlocks == 0, "Unlock Data status error");
         _;
     }
 
