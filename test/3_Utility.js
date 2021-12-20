@@ -21,7 +21,7 @@ contract("Testing secondary functions", accounts => {
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
     })
 
-    it('should revert arrays not the same length', async ()=> {
+    it('should revert arrays not the same length', async () => {
         await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1], [1, 1], { from: firstAddress }), 'Both arrays should have same length')
         await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1, 1], [1], { from: firstAddress }), 'Both arrays should have same length')
     })
@@ -49,10 +49,23 @@ contract("Testing secondary functions", accounts => {
         await originalToken.FreeTest()
         const currentTotalSupply = await originalToken.totalSupply()
         assert.notEqual(previousTotalSupply, currentTotalSupply)
-        assert.equal(currentTotalSupply, previousTotalSupply * 2)  
+        assert.equal(currentTotalSupply, previousTotalSupply * 2)
     })
 
     it('Decimal more than 18', async () => {
         await truffleAssert.reverts(Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '19', firstAddress, { from: firstAddress }))
+    })
+
+    it('Unlock Data Already Present', async () => {
+        const forthAddress = accounts[3]
+        const token = await Token.new('Token', 'SYMB', cap.toString(), '18', forthAddress, { from: forthAddress })
+        const balance = await token.balanceOf(forthAddress)
+        await truffleAssert.reverts(token.getActivationResult(balance), 'Unlock Data status error')
+    })
+
+    it('Original Token not Ready', async () => {
+        const thirdAddress = accounts[2]
+        const token = await Token.new('Token', 'SYMB', cap.toString(), '18', thirdAddress, { from: thirdAddress })
+        await truffleAssert.reverts(token.ActivateSynthetic({ from: thirdAddress }), 'Unlock Data status error')
     })
 })
