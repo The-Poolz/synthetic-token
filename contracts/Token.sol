@@ -36,7 +36,7 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal virtual override(ERC20Capped, ERC20)
     {
-        require(FinishTime >= now || isWhitelisted(to), "Invalid Transfer Time or To Address" );
+        require(FinishTime <= now || isWhitelisted(to), "Invalid Transfer Time or To Address" );
         super._beforeTokenTransfer(from, to, amount); // Call parent hook
     }
 
@@ -60,7 +60,9 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         assert(amountToBurn == _amountToActivate);
     }
 
-    function getActivationResult(uint _amountToActivate) public view tokenReady(true) returns(uint, uint, uint64[] memory, uint256[] memory)  {
+    function getActivationResult(uint _amountToActivate)
+        public view tokenReady(true) returns(uint, uint, uint64[] memory, uint256[] memory)
+    {
         uint TotalTokens;
         uint CreditableAmount; 
         uint64[] memory unlockTimes = new uint64[](totalUnlocks);
