@@ -19,9 +19,9 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         uint _cap,
         uint8 _decimals,
         address _owner,
-        address _originalTokenAddress,
-        uint64[] memory _unlockTimes,
-        uint8[] memory _ratios
+        address _lockedDealAddress,
+        address _whitelistAddress,
+        uint256 _whitelistId
     )
         public
         ERC20(_name, _symbol)
@@ -30,14 +30,25 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         require(_decimals <= 18, "Decimal more than 18");
         _setupDecimals(_decimals);
         _mint(_owner, cap());
-        _SetLockingDetails(_originalTokenAddress, cap(), _unlockTimes, _ratios);
+        _SetLockedDealAddress(_lockedDealAddress);
+        _SetupWhitelist(_whitelistAddress, _whitelistId);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal virtual override(ERC20Capped, ERC20)
     {
-        require(FinishTime <= now || isWhitelisted(to), "Invalid Transfer Time or To Address" );
+        require(FinishTime <= now || _msgSender() == owner() || registerWhitelist(to, amount), "Invalid Transfer Time or To Address" );
+        //register here
         super._beforeTokenTransfer(from, to, amount); // Call parent hook
+    }
+
+    function SetLockingDetails(
+        address _tokenAddress,
+        uint64[] calldata _unlockTimes,
+        uint8[] calldata _ratios,
+        uint256 _finishTime
+    ) external onlyOwnerOrGov  {
+        _SetLockingDetails(_tokenAddress, cap(), _unlockTimes, _ratios, _finishTime);
     }
 
     function ActivateSynthetic() external {
