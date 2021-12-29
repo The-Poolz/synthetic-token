@@ -10,6 +10,7 @@ contract("Testing secondary functions", accounts => {
     const cap = new BigNumber(10000)
     const timestamps = []
     const ratios = [1, 1, 1]
+    const finishTime = parseInt(new Date().getTime() / 1000) + 60 * 60
 
     before(async () => {
         originalToken = await TestToken.new('OrgToken', 'ORGT');
@@ -17,32 +18,32 @@ contract("Testing secondary functions", accounts => {
         timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
         timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
         timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
-        token = await Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '18', firstAddress, { from: firstAddress })
+        token = await Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '18', firstAddress, accounts[9], accounts[8], '10', { from: firstAddress })
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
     })
 
     it('should revert arrays not the same length', async ()=> {
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1], [1, 1], { from: firstAddress }), 'Both arrays should have same length')
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1, 1], [1], { from: firstAddress }), 'Both arrays should have same length')
+        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1], [1, 1], finishTime.toString(), { from: firstAddress }), 'Both arrays should have same length')
+        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1, 1], [1], finishTime.toString(), { from: firstAddress }), 'Both arrays should have same length')
     })
 
     it('should revert empty array', async () => {
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [], [], { from: firstAddress }), 'Array length should be greater than 0')
+        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [], [], finishTime.toString(), { from: firstAddress }), 'Array length should be greater than 0')
     })
 
     it('should revert second call set locking details', async () => {
-        await token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress })
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, timestamps, ratios, { from: firstAddress }), 'Unlock Data status error')
+        await token.SetLockingDetails(originalToken.address, timestamps, ratios, finishTime.toString(), { from: firstAddress })
+        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, timestamps, ratios, finishTime.toString(), { from: firstAddress }), 'Unlock Data status error')
     })
 
-    it('should set locked deal address', async () => {
-        const lockedDealAddress = accounts[1]
-        const previousAddress = await token.LockedDealAddress()
-        await token.SetLockedDealAddress(lockedDealAddress)
-        const newLockedDealAddress = await token.LockedDealAddress()
-        assert.equal(newLockedDealAddress, lockedDealAddress, 'check locked deal address')
-        assert.notEqual(previousAddress, newLockedDealAddress)
-    })
+    // it('should set locked deal address', async () => {
+    //     const lockedDealAddress = accounts[1]
+    //     const previousAddress = await token.LockedDealAddress()
+    //     await token.SetLockedDealAddress(lockedDealAddress)
+    //     const newLockedDealAddress = await token.LockedDealAddress()
+    //     assert.equal(newLockedDealAddress, lockedDealAddress, 'check locked deal address')
+    //     assert.notEqual(previousAddress, newLockedDealAddress)
+    // })
 
     it('token minting', async () => {
         const previousTotalSupply = await originalToken.totalSupply()
@@ -53,6 +54,6 @@ contract("Testing secondary functions", accounts => {
     })
 
     it('Decimal more than 18', async () => {
-        await truffleAssert.reverts(Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '19', firstAddress, { from: firstAddress }), 'Decimal more than 18')
+        await truffleAssert.reverts(Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '19', firstAddress, accounts[9], accounts[8], '10', { from: firstAddress }), 'Decimal more than 18')
     })
 })
