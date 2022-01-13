@@ -20,8 +20,7 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         uint8 _decimals,
         address _owner,
         address _lockedDealAddress,
-        address _whitelistAddress,
-        uint256 _whitelistId
+        address _whitelistAddress
     )
         public
         ERC20(_name, _symbol)
@@ -31,7 +30,9 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         _setupDecimals(_decimals);
         _mint(_owner, cap());
         _SetLockedDealAddress(_lockedDealAddress);
-        _SetupWhitelist(_whitelistAddress, _whitelistId);
+        uint256 whitelistId = IWhiteList(_whitelistAddress).CreateManualWhiteList(uint256(-1), address(this));
+        IWhiteList(_whitelistAddress).ChangeCreator(whitelistId, _msgSender());
+        _SetupWhitelist(_whitelistAddress, whitelistId);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
