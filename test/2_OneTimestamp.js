@@ -60,7 +60,6 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         assert.equal(event.logs[3].args.Owner, firstAddress)
         assert.equal(event.logs[3].args.Amount, 0)
     })
-
     it('Original Token not Ready', async () => {
         const thirdAddress = accounts[2]
         const token = await Token.new('Token', 'SYMB', cap.toString(), '18', thirdAddress, accounts[9], accounts[8], '10', { from: thirdAddress })
