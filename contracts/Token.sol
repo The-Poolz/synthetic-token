@@ -43,7 +43,6 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         internal virtual override(ERC20Capped, ERC20)
     {
         require(FinishTime <= now || _msgSender() == owner() || registerWhitelist(to, amount), "Invalid Transfer Time or To Address" );
-        //register here
         super._beforeTokenTransfer(from, to, amount); // Call parent hook
     }
 
