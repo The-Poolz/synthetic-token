@@ -7,6 +7,9 @@ BigNumber.config({ EXPONENTIAL_AT: 1e+9 })
 
 contract("Testing secondary functions", accounts => {
     let token, originalToken, firstAddress = accounts[0]
+    const synthTokenName = "REAL Synthetic", tokenSymbol = "~REAL Poolz", decimals = '18'
+    const lockedDealAddress = accounts[9]
+    const zeroAddress = '0x0000000000000000000000000000000000000000'
     const cap = new BigNumber(10000)
     const timestamps = []
     const ratios = [1, 1, 1]
@@ -18,10 +21,10 @@ contract("Testing secondary functions", accounts => {
         timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
         timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
         timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
-        token = await Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '18', firstAddress, accounts[9], accounts[8], '10', { from: firstAddress })
+        token = await Token.new(synthTokenName, tokenSymbol, cap.toString(), decimals, firstAddress, lockedDealAddress, zeroAddress, { from: firstAddress })
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
     })
-    it('should revert arrays not the same length', async ()=> {
+    it('should revert arrays not the same length', async () => {
         await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1], [1, 1], finishTime.toString(), { from: firstAddress }), 'Both arrays should have same length')
         await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1, 1], [1], finishTime.toString(), { from: firstAddress }), 'Both arrays should have same length')
     })
@@ -53,19 +56,20 @@ contract("Testing secondary functions", accounts => {
     })
 
     it('Decimal more than 18', async () => {
-        await truffleAssert.reverts(Token.new('REAL Synthetic', '~REAL Poolz', cap.toString(), '19', firstAddress, accounts[9], accounts[8], '10', { from: firstAddress }), 'Decimal more than 18')
+        const decimals = '19'
+        await truffleAssert.reverts(Token.new(synthTokenName, tokenSymbol, cap.toString(), decimals, firstAddress, lockedDealAddress, zeroAddress, { from: firstAddress }), 'Decimal more than 18')
     })
 
     it('Unlock Data Already Present', async () => {
         const forthAddress = accounts[3]
-        const token = await Token.new('Token', 'SYMB', cap.toString(), '18', forthAddress, { from: forthAddress })
+        const token = await Token.new('Token', 'SYMB', cap.toString(), decimals, forthAddress, lockedDealAddress, zeroAddress, { from: forthAddress })
         const balance = await token.balanceOf(forthAddress)
         await truffleAssert.reverts(token.getActivationResult(balance), 'Unlock Data status error')
     })
 
     it('Original Token not Ready', async () => {
         const thirdAddress = accounts[2]
-        const token = await Token.new('Token', 'SYMB', cap.toString(), '18', thirdAddress, { from: thirdAddress })
+        const token = await Token.new('Token', 'SYMB', cap.toString(), decimals, thirdAddress, lockedDealAddress, zeroAddress, { from: thirdAddress })
         await truffleAssert.reverts(token.ActivateSynthetic({ from: thirdAddress }), 'Unlock Data status error')
     })
 })
