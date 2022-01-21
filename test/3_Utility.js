@@ -72,4 +72,15 @@ contract("Testing secondary functions", accounts => {
         const token = await Token.new('Token', 'SYMB', cap.toString(), decimals, thirdAddress, lockedDealAddress, zeroAddress, { from: thirdAddress })
         await truffleAssert.reverts(token.ActivateSynthetic({ from: thirdAddress }), 'Unlock Data status error')
     })
+
+    it('should transfer with zero whitelist address', async () => {
+        const secondAddress = accounts[2]
+        const amount = '1000'
+        await token.transfer(secondAddress, amount, {from: firstAddress})
+        let balance = await token.balanceOf(secondAddress)
+        assert.equal(balance.toString(), amount, 'check second address balance')
+        await token.transfer(firstAddress, amount, {from: secondAddress})
+        balance = await token.balanceOf(secondAddress)
+        assert.equal(balance.toString(), '0', 'check second address balance')
+    })
 })
