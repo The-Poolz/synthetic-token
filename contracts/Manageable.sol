@@ -54,8 +54,9 @@ contract Manageable is ERC20Helper, GovManager{
         emit LockingDetails(_tokenAddress, _amount, totalUnlocks, _finishTime);
     }
 
-    function _SetLockedDealAddress(address lockedDeal) internal onlyOwnerOrGov {
-        LockedDealAddress = lockedDeal;
+    function _SetLockedDealAddress(address _lockedDeal) internal onlyOwnerOrGov {
+        require(_lockedDeal != address(0), "LockedDeal address cannot be zero");
+        LockedDealAddress = _lockedDeal;
     }
 
     function _SetupWhitelist(address _whitelistAddress, uint256 _whitelistId) internal onlyOwnerOrGov {
