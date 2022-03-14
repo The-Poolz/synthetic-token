@@ -49,6 +49,7 @@ contract Manageable is ERC20Helper, GovManager{
             LockDetails[i] = lockDetails(_unlockTimes[i], _ratios[i]);
             totalOfRatios = SafeMath.add(totalOfRatios, _ratios[i]);
         }
+        require(totalOfRatios > 0, "Total Of Ratios cannot be Zero");
         totalUnlocks = uint8(_unlockTimes.length);
         FinishTime = _finishTime;
         emit LockingDetails(_tokenAddress, _amount, totalUnlocks, _finishTime);
