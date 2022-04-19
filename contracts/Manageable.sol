@@ -39,7 +39,7 @@ contract Manageable is ERC20Helper, GovManager{
         uint256 _amount,
         uint64[] memory _unlockTimes,
         uint8[] memory _ratios,
-        uint256 _finishTime
+        uint256 _finishTime //Need to be 0 - until duch sale
     ) internal tokenReady(false) {
         require(_unlockTimes.length == _ratios.length, "Both arrays should have same length.");
         require(_unlockTimes.length > 0, "Array length should be greater than 0");
