@@ -38,12 +38,22 @@
 <tr>
 <td align="center"><b>ActivateSynthetic</b></td>
 <td align="left"><pre>
-<b>id: 0</b> TransferOut(uint256 Amount, address To, address Token)
+<b>if without create new pool</b>
+<b>id: 0</b>  TransferOut(uint256 Amount, address To, address Token)
 <b>id: 1</b>  Transfer(address indexed from, address indexed to, uint256 value)
 <b>id: 2</b>  Approval(address indexed owner, address indexed spender, uint256 value)
 <b>id: 3</b>  TokenActivated(address Owner, uint256 Amount)
+<br>
+<b>if create new pool</b>
+<b>id: 0</b>  TransferOut(uint256 Amount, address To, address Token)
+<b>id: 1</b>  Transfer(address indexed from, address indexed to, uint256 value)
+<b>id: 2</b>  Approval(address indexed owner, address indexed spender, uint256 value)
+       NewPoolCreated(uint256 PoolId, address Token, uint64 FinishTime, uint256 StartAmount, address Owner) 
+       TokenActivated(address Owner, uint256 Amount)
 </pre></td>
-<td><a href="https://testnet.bscscan.com/tx/0x461fbb318fd0a2a39d5afa3fdecee4b1b0d97930c958c4ae96afb2476eea24e6#eventlog">ActivateSynthetic</a></td>
+<td><pre><a href="https://testnet.bscscan.com/tx/0x461fbb318fd0a2a39d5afa3fdecee4b1b0d97930c958c4ae96afb2476eea24e6#eventlog">if without create new pool</a>
+<a href="https://testnet.bscscan.com/tx/0x302a813f8ed18ceb15afb0ab4e7487d85a3f2d1dfebddad4552fff992b3e7e71#eventlog">if create new pool</a>
+</pre></td>
 </tr>
 </tbody>
 </table>
