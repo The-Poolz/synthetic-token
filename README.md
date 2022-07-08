@@ -32,7 +32,7 @@ truffle migrate --network dashboard
 
 ### Contract Creation
 
-When we create a synthetic token, we need to adhere to the settings of the original token as much as possible.
+When we create a synthetic token, we need to stick to the settings of the original token.
 
 - Decimal numbers must be the same as the original token
 - If the capitalization of the synthetic token is greater than the original token, we will not be able to block the original tokens
