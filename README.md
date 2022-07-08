@@ -29,19 +29,30 @@ truffle migrate --network dashboard
 ```
 
 ## Functions
-### Constructor
+
+### Contract Creation
+
+When we create a synthetic token, we need to adhere to the settings of the original token as much as possible.
+
+- Decimal numbers must be the same as the original token
+- If the capitalization of the synthetic token is greater than the original token, we will not be able to block the original tokens
+- Synthetic token contract can't work without Locked-Deal contract
+
 ```solidity
 constructor(
         string memory _name, // token name
         string memory _symbol, // token symbol
-        uint _cap, // better set capitalization as original token
+        uint _cap, // set the capitalization of synthetic tokens
         uint8 _decimals, // token decimals
         address _owner, // who will take synthetic tokens
         address _lockedDealAddress, // can't be zero address
         address _whitelistAddress
     )
 ```
-### SetLockingDetails
+
+### Transfer the original tokens to the envelope token contract
+Using **SetLockingDetails** function allows us to transfer one-time original tokens to a contract of synthetic tokens.
+
 ```solidity
 // Can only use the owner address or Governer contract.
 SetLockingDetails(
@@ -51,17 +62,27 @@ SetLockingDetails(
         uint256 _finishTime // after finish time we can transfer tokens
     )
 ```
-### getActivationResult
+
+### Get information about locking
+getActivationResult is view function that returns main information about locking tokens. 
+* Total tokens 
+* Creditable amount
+* Unlock times
+* Unlock amounts
 ```solidity
 getActivationResult(uint _amountToActivate)
 public
 view
 returns(uint TotalTokens, uint CreditableAmount, uint64[] memory unlockTimes, uint256[] memory unlockAmounts)
 ```
-### ActivateSynthetic
+
+### Take original tokens
+Each user that have synthetic tokens can “Open” the Envelope to receive the original token. User can open the Envelopes only after the expiration of the agreement by using Locked-Deal contract.
 ```solidity
 // try to take original tokens if time is up or create new locked pools
-ActivateSynthetic(uint _amountToActivate) 
-//and
+ActivateSynthetic(uint _amountToActivate)
+//or
 ActivateSynthetic() // _amountToActivate = balance of the tokens that the sender has
 ```
+## License
+The-Poolz Contracts is released under the MIT License.
