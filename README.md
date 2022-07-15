@@ -50,6 +50,9 @@ constructor(
     )
 ```
 
+Testnet tx (without a whitelist): [link](https://testnet.bscscan.com/tx/0x7a6c8e3a116525bab39eecd17f2c2992aed937fb386de5d91c1750278dce4085)
+Testnet tx (with a whitelist): [link](https://testnet.bscscan.com/tx/0xc90fc3988eeac64b6cfc8d913f85dd750c329677ad056a9423c5fb90a7b96663)
+
 ### Transfer the original tokens to the envelope token contract
 Using **SetLockingDetails** function allows us to transfer one-time original tokens to a contract of synthetic tokens.
 
@@ -62,6 +65,8 @@ SetLockingDetails(
         uint256 _finishTime // after finish time we can transfer tokens
     )
 ```
+
+Testnet tx: [link](https://testnet.bscscan.com/tx/0x072c7f97baf0ecbd802878ffdbfd810f4e698ed5c49c66d2d3f389bfe9c38bf1)
 
 ### Get information about locking
 getActivationResult is view function that returns main information about locking tokens. 
@@ -84,5 +89,9 @@ ActivateSynthetic(uint _amountToActivate)
 //or
 ActivateSynthetic() // _amountToActivate = balance of the tokens that the sender has
 ```
+
+Testnet tx (without a creating new pool): [link](https://testnet.bscscan.com/tx/0x461fbb318fd0a2a39d5afa3fdecee4b1b0d97930c958c4ae96afb2476eea24e6)
+Testnet tx (with a creating new pool): [link](https://testnet.bscscan.com/tx/0x302a813f8ed18ceb15afb0ab4e7487d85a3f2d1dfebddad4552fff992b3e7e71)
+
 ## License
 The-Poolz Contracts is released under the MIT License.
