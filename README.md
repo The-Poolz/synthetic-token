@@ -92,6 +92,7 @@ ActivateSynthetic() // _amountToActivate = balance of the tokens that the sender
 ```
 
 Testnet tx (without a creating new pool): [link](https://testnet.bscscan.com/tx/0x461fbb318fd0a2a39d5afa3fdecee4b1b0d97930c958c4ae96afb2476eea24e6)
+<br>
 Testnet tx (with a creating new pool): [link](https://testnet.bscscan.com/tx/0x302a813f8ed18ceb15afb0ab4e7487d85a3f2d1dfebddad4552fff992b3e7e71)
 
 ## License
