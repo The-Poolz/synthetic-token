@@ -51,6 +51,7 @@ constructor(
 ```
 
 Testnet tx (without a whitelist): [link](https://testnet.bscscan.com/tx/0x7a6c8e3a116525bab39eecd17f2c2992aed937fb386de5d91c1750278dce4085)
+<br>
 Testnet tx (with a whitelist): [link](https://testnet.bscscan.com/tx/0xc90fc3988eeac64b6cfc8d913f85dd750c329677ad056a9423c5fb90a7b96663)
 
 ### Transfer the original tokens to the envelope token contract
