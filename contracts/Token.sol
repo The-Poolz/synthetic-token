@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.8.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Capped.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Burnable.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./Manageable.sol";
-import "poolz-helper/contracts/ERC20Helper.sol";
-import "poolz-helper/contracts/ILockedDeal.sol";
+import "poolz-helper-v2/contracts/interfaces/ILockedDealV2.sol";
 
-contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
+contract POOLZSYNT is ERC20Capped, ERC20Burnable, Manageable {
     event TokenActivated(address Owner, uint256 Amount);
+
+    // https://docs.openzeppelin.com/contracts/4.x/erc20#a-note-on-decimals
+    uint8 private Decimals;
 
     constructor(
         string memory _name,
@@ -22,16 +22,15 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         address _lockedDealAddress,
         address _whitelistAddress
     )
-        public
         ERC20(_name, _symbol)
         ERC20Capped(_cap * 10**uint(_decimals))
     {
         require(_decimals <= 18, "Decimal more than 18");
-        _setupDecimals(_decimals);
+        Decimals = _decimals;
         _mint(_owner, cap());
         _SetLockedDealAddress(_lockedDealAddress);
         if(_whitelistAddress != address(0)){
-            uint256 whitelistId = IWhiteList(_whitelistAddress).CreateManualWhiteList(uint256(-1), address(this));
+            uint256 whitelistId = IWhiteList(_whitelistAddress).CreateManualWhiteList(type(uint).max, address(this));
             IWhiteList(_whitelistAddress).ChangeCreator(whitelistId, _msgSender());
             _SetupWhitelist(_whitelistAddress, whitelistId);
         } else {
@@ -39,10 +38,18 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         }
     }
 
+    function decimals() public view override returns (uint8) {
+		return Decimals;
+	}
+
+    function _mint(address _account, uint _amount) internal virtual override(ERC20Capped, ERC20) {
+        super._mint(_account, _amount);
+    }
+
     function _beforeTokenTransfer(address from, address to, uint256 amount)
-        internal virtual override(ERC20Capped, ERC20)
+        internal virtual override
     {
-        require(FinishTime <= now 
+        require(FinishTime <= block.timestamp 
             || _msgSender() == owner() 
             || to == address(0)
             || registerWhitelist(to, amount),
@@ -66,13 +73,13 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
     function ActivateSynthetic(uint _amountToActivate) public tokenReady(true) {
         (uint amountToBurn, uint CreditableAmount, uint64[] memory unlockTimes, uint256[] memory unlockAmounts) = getActivationResult(_amountToActivate);
         TransferToken(OriginalTokenAddress, _msgSender(), CreditableAmount);
-        if(SafeMath.sub(amountToBurn, CreditableAmount) > 0){
+        if(amountToBurn - CreditableAmount > 0){
             require(LockedDealAddress != address(0), "Error: LockedDeal Contract Address Missing");
-            ApproveAllowanceERC20(OriginalTokenAddress, LockedDealAddress, SafeMath.sub(amountToBurn, CreditableAmount));
+            ApproveAllowanceERC20(OriginalTokenAddress, LockedDealAddress, amountToBurn - CreditableAmount);
             for(uint8 i=0 ; i<unlockTimes.length ; i++){
                 if(unlockAmounts[i] > 0){
-                    ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockAmounts[i], _msgSender());         
-                }
+                    ILockedDealV2(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockTimes[i], unlockAmounts[i], _msgSender());
+            }
             }
         }
         burn(amountToBurn);   // here will be check for balance
@@ -90,13 +97,10 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
         uint8 iterator;
 
         for(uint8 i=0 ; i<totalUnlocks ; i++){
-            uint amount = SafeMath.div(
-                SafeMath.mul( _amountToActivate, LockDetails[i].ratio ),
-                totalOfRatios
-            );
-            TotalTokens = SafeMath.add(TotalTokens, amount);
-            if(LockDetails[i].unlockTime <= now){
-                CreditableAmount = SafeMath.add(CreditableAmount, amount);
+            uint amount = (_amountToActivate * LockDetails[i].ratio) / totalOfRatios;
+            TotalTokens += amount;
+            if(LockDetails[i].unlockTime <= block.timestamp){
+                CreditableAmount += amount;
             } else {
                 unlockTimes[iterator] = LockDetails[i].unlockTime;
                 unlockAmounts[iterator] = amount;
@@ -104,13 +108,13 @@ contract POOLZSYNT is ERC20, ERC20Capped, ERC20Burnable, Manageable {
             }
         }
         if(TotalTokens < _amountToActivate){
-            uint difference = SafeMath.sub(_amountToActivate, TotalTokens);
+            uint difference = _amountToActivate - TotalTokens;
             if(unlockAmounts[0] == 0){
-                CreditableAmount = SafeMath.add(CreditableAmount, difference);
+                CreditableAmount += difference;
             } else {
                 for(uint8 i=totalUnlocks - 1; i >= 0 ; i--){
                     if(unlockAmounts[i] > 0){
-                        unlockAmounts[i] = SafeMath.add(unlockAmounts[i], difference);
+                        unlockAmounts[i] += difference;
                         break;
                     }
                 }

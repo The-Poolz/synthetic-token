@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.8.0;
 
-import "poolz-helper/contracts/ERC20Helper.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "poolz-helper/contracts/GovManager.sol";
-import "poolz-helper/contracts/IWhiteList.sol";
+import "poolz-helper-v2/contracts/ERC20Helper.sol";
+import "poolz-helper-v2/contracts/GovManager.sol";
+import "poolz-helper-v2/contracts/interfaces/IWhiteList.sol";
 
 contract Manageable is ERC20Helper, GovManager{
 
@@ -47,7 +46,7 @@ contract Manageable is ERC20Helper, GovManager{
         TransferInToken(_tokenAddress, msg.sender, _amount);
         for(uint8 i=0; i<_unlockTimes.length ; i++){
             LockDetails[i] = lockDetails(_unlockTimes[i], _ratios[i]);
-            totalOfRatios = SafeMath.add(totalOfRatios, _ratios[i]);
+            totalOfRatios += _ratios[i];
         }
         require(totalOfRatios > 0, "Total Of Ratios cannot be Zero");
         totalUnlocks = uint8(_unlockTimes.length);
