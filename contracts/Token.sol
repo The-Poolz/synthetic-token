@@ -2,16 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "./ERC20WithDecimals.sol";
 import "./Manageable.sol";
-import "poolz-helper-v2/contracts/interfaces/ILockedDealV2.sol";
+import "poolz-helper-v2/contracts/interfaces/ILockedDeal.sol";
 
-contract POOLZSYNT is ERC20Capped, ERC20Burnable, Manageable {
+contract POOLZSYNT is ERC20WithDecimals, Manageable {
     event TokenActivated(address Owner, uint256 Amount);
-
-    // https://docs.openzeppelin.com/contracts/4.x/erc20#a-note-on-decimals
-    uint8 private Decimals;
 
     constructor(
         string memory _name,
@@ -23,10 +19,10 @@ contract POOLZSYNT is ERC20Capped, ERC20Burnable, Manageable {
         address _whitelistAddress
     )
         ERC20(_name, _symbol)
+        ERC20WithDecimals(_decimals)
         ERC20Capped(_cap * 10**uint(_decimals))
     {
         require(_decimals <= 18, "Decimal more than 18");
-        Decimals = _decimals;
         _mint(_owner, cap());
         _SetLockedDealAddress(_lockedDealAddress);
         if(_whitelistAddress != address(0)){
@@ -36,14 +32,6 @@ contract POOLZSYNT is ERC20Capped, ERC20Burnable, Manageable {
         } else {
             _SetupWhitelist(_whitelistAddress, 0);
         }
-    }
-
-    function decimals() public view override returns (uint8) {
-		return Decimals;
-	}
-
-    function _mint(address _account, uint _amount) internal virtual override(ERC20Capped, ERC20) {
-        super._mint(_account, _amount);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
@@ -78,7 +66,7 @@ contract POOLZSYNT is ERC20Capped, ERC20Burnable, Manageable {
             ApproveAllowanceERC20(OriginalTokenAddress, LockedDealAddress, amountToBurn - CreditableAmount);
             for(uint8 i=0 ; i<unlockTimes.length ; i++){
                 if(unlockAmounts[i] > 0){
-                    ILockedDealV2(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockTimes[i], unlockAmounts[i], _msgSender());
+                    ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockAmounts[i], _msgSender());
             }
             }
         }
