@@ -6,7 +6,7 @@ import "./ERC20WithDecimals.sol";
 import "./Manageable.sol";
 import "poolz-helper-v2/contracts/interfaces/ILockedDeal.sol";
 
-contract POOLZSYNT is ERC20WithDecimals, Manageable {
+contract POOLZSYNT is ERC20WithDecimals {
     event TokenActivated(address Owner, uint256 Amount);
 
     constructor(
@@ -32,17 +32,6 @@ contract POOLZSYNT is ERC20WithDecimals, Manageable {
         } else {
             _SetupWhitelist(_whitelistAddress, 0);
         }
-    }
-
-    function _beforeTokenTransfer(address from, address to, uint256 amount)
-        internal virtual override
-    {
-        require(FinishTime <= block.timestamp 
-            || _msgSender() == owner() 
-            || to == address(0)
-            || registerWhitelist(to, amount),
-            "Invalid Transfer Time or To Address");
-        super._beforeTokenTransfer(from, to, amount); // Call parent hook
     }
 
     function SetLockingDetails(
