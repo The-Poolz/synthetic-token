@@ -25,27 +25,22 @@ contract("Testing secondary functions", accounts => {
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
     })
     it('should revert arrays not the same length', async () => {
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1], [1, 1], finishTime.toString(), { from: firstAddress }), 'Both arrays should have same length')
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [1, 1], [1], finishTime.toString(), { from: firstAddress }), 'Both arrays should have same length')
+        await truffleAssert.reverts(
+            token.SetLockingDetails(originalToken.address, [1], [1, 1], [1, 1], finishTime.toString(), { from: firstAddress }), 'Arrays should have same length')
+        await truffleAssert.reverts(
+            token.SetLockingDetails(originalToken.address, [1, 1], [1], [1, 1], finishTime.toString(), { from: firstAddress }), 'Arrays should have same length')
     })
 
     it('should revert empty array', async () => {
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, [], [], finishTime.toString(), { from: firstAddress }), 'Array length should be greater than 0')
+        await truffleAssert.reverts(
+            token.SetLockingDetails(originalToken.address, [], [], [], finishTime.toString(), { from: firstAddress }), 'Array length should be greater than 0')
     })
 
     it('should revert second call set locking details', async () => {
-        await token.SetLockingDetails(originalToken.address, timestamps, ratios, finishTime.toString(), { from: firstAddress })
-        await truffleAssert.reverts(token.SetLockingDetails(originalToken.address, timestamps, ratios, finishTime.toString(), { from: firstAddress }), 'Unlock Data status error')
+        await token.SetLockingDetails(originalToken.address, timestamps, timestamps, ratios, finishTime.toString(), { from: firstAddress })
+        await truffleAssert.reverts(
+            token.SetLockingDetails(originalToken.address, timestamps, timestamps, ratios, finishTime.toString(), { from: firstAddress }), 'Unlock Data status error')
     })
-
-    // it('should set locked deal address', async () => {
-    //     const lockedDealAddress = accounts[1]
-    //     const previousAddress = await token.LockedDealAddress()
-    //     await token.SetLockedDealAddress(lockedDealAddress)
-    //     const newLockedDealAddress = await token.LockedDealAddress()
-    //     assert.equal(newLockedDealAddress, lockedDealAddress, 'check locked deal address')
-    //     assert.notEqual(previousAddress, newLockedDealAddress)
-    // })
 
     it('token minting', async () => {
         const previousTotalSupply = await originalToken.totalSupply()

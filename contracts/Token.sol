@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./ERC20WithDecimals.sol";
 import "./Manageable.sol";
-import "poolz-helper-v2/contracts/interfaces/ILockedDeal.sol";
+import "poolz-helper-v2/contracts/interfaces/ILockedDealV2.sol";
 
 contract POOLZSYNT is ERC20WithDecimals {
     event TokenActivated(address Owner, uint256 Amount);
@@ -36,11 +36,12 @@ contract POOLZSYNT is ERC20WithDecimals {
 
     function SetLockingDetails(
         address _tokenAddress,
-        uint64[] calldata _unlockTimes,
+        uint64[] calldata _startTimes,
+        uint64[] calldata _finishTimes,
         uint8[] calldata _ratios,
         uint256 _finishTime
     ) external onlyOwnerOrGov  {
-        _SetLockingDetails(_tokenAddress, cap(), _unlockTimes, _ratios, _finishTime);
+        _SetLockingDetails(_tokenAddress, cap(), _startTimes, _finishTimes, _ratios, _finishTime);
     }
 
     function ActivateSynthetic() external {
@@ -48,15 +49,27 @@ contract POOLZSYNT is ERC20WithDecimals {
     }
 
     function ActivateSynthetic(uint _amountToActivate) public tokenReady(true) {
-        (uint amountToBurn, uint CreditableAmount, uint64[] memory unlockTimes, uint256[] memory unlockAmounts) = getActivationResult(_amountToActivate);
+        (
+            uint256 amountToBurn,
+            uint256 CreditableAmount,
+            uint64[] memory startTimes,
+            uint64[] memory finishTimes,
+            uint256[] memory unlockAmounts
+        ) = getActivationResult(_amountToActivate);
         TransferToken(OriginalTokenAddress, _msgSender(), CreditableAmount);
         if(amountToBurn - CreditableAmount > 0){
             require(LockedDealAddress != address(0), "Error: LockedDeal Contract Address Missing");
             ApproveAllowanceERC20(OriginalTokenAddress, LockedDealAddress, amountToBurn - CreditableAmount);
-            for(uint8 i=0 ; i<unlockTimes.length ; i++){
-                if(unlockAmounts[i] > 0){
-                    ILockedDeal(LockedDealAddress).CreateNewPool(OriginalTokenAddress, unlockTimes[i], unlockAmounts[i], _msgSender());
-            }
+            for (uint8 i = 0; i < startTimes.length; i++) {
+                if (unlockAmounts[i] > 0) {
+                    ILockedDealV2(LockedDealAddress).CreateNewPool(
+                        OriginalTokenAddress,
+                        startTimes[i],
+                        finishTimes[i],
+                        unlockAmounts[i],
+                        _msgSender()
+                    );
+                }
             }
         }
         burn(amountToBurn);   // here will be check for balance
@@ -65,21 +78,22 @@ contract POOLZSYNT is ERC20WithDecimals {
     }
 
     function getActivationResult(uint _amountToActivate)
-        public view tokenReady(true) returns(uint, uint, uint64[] memory, uint256[] memory)
+        public view tokenReady(true) 
+        returns(uint TotalTokens, uint CreditableAmount, uint64[] memory startTimes, uint64[] memory finishTimes, uint256[] memory unlockAmounts)
     {
-        uint TotalTokens;
-        uint CreditableAmount; 
-        uint64[] memory unlockTimes = new uint64[](totalUnlocks);
-        uint256[] memory unlockAmounts = new uint256[](totalUnlocks);
+        startTimes = new uint64[](totalUnlocks);
+        finishTimes = new uint64[](totalUnlocks);
+        unlockAmounts = new uint256[](totalUnlocks);
         uint8 iterator;
 
         for(uint8 i=0 ; i<totalUnlocks ; i++){
             uint amount = (_amountToActivate * LockDetails[i].ratio) / totalOfRatios;
             TotalTokens += amount;
-            if(LockDetails[i].unlockTime <= block.timestamp){
+            if(LockDetails[i].startTime <= block.timestamp){
                 CreditableAmount += amount;
             } else {
-                unlockTimes[iterator] = LockDetails[i].unlockTime;
+                startTimes[iterator] = LockDetails[i].startTime;
+                finishTimes[iterator] = LockDetails[i].finishTime;
                 unlockAmounts[iterator] = amount;
                 iterator++;
             }
@@ -98,6 +112,5 @@ contract POOLZSYNT is ERC20WithDecimals {
             }
             TotalTokens = _amountToActivate;
         }
-        return(TotalTokens, CreditableAmount, unlockTimes, unlockAmounts);
     }
 }

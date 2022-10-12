@@ -39,7 +39,7 @@ contract("Testing Synthetic Token", accounts => {
 
     it('should set locking details', async () => {
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
-        const tx = await token.SetLockingDetails(originalToken.address, timestamps, ratios, finishTime.toString(), { from: firstAddress })
+        const tx = await token.SetLockingDetails(originalToken.address, timestamps, timestamps, ratios, finishTime.toString(), { from: firstAddress })
         const originalAddress = tx.logs[3].args.TokenAddress
         const totalAmount = tx.logs[3].args.Amount
         const totalUnlocks = tx.logs[3].args.TotalUnlocks
@@ -61,7 +61,8 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(finishTime.toString(), finish.toString())
         for (let i = 0; i < totalUnlocks; i++) {
             const details = await token.LockDetails(i)
-            assert.equal(details.unlockTime.toString(), timestamps[i].toString())
+            assert.equal(details.startTime.toString(), timestamps[i].toString())
+            assert.equal(details.finishTime.toString(), timestamps[i].toString())
             assert.equal(details.ratio.toString(), ratios[i].toString())
         }
     })
@@ -73,9 +74,10 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(result[0].toString(), balance, 'check total tokens')
         assert.equal(result[1], 0, 'check creditable amount')
         assert.equal(result[2].toString(), timestamps.toString(), 'check unlock times')
-        assert.equal(result[3][0], balance / totalOfRatios, 'check first unlock amount')
-        assert.equal(result[3][1], balance / totalOfRatios, 'check second unlock amount')
-        assert.equal(result[3][2], balance / totalOfRatios + 1, 'check third unlock amount')
+        assert.equal(result[3].toString(), timestamps.toString(), 'check unlock times')
+        assert.equal(result[4][0], balance / totalOfRatios, 'check first unlock amount')
+        assert.equal(result[4][1], balance / totalOfRatios, 'check second unlock amount')
+        assert.equal(result[4][2], balance / totalOfRatios + 1, 'check third unlock amount')
     })
 
     it('testing get activation when tokens less than time stamps', async () => {
@@ -83,9 +85,10 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(result[0].toString(), 2, 'check total tokens')
         assert.equal(result[1], 2, 'check creditable amount')
         assert.equal(result[2].toString(), timestamps, 'check unlock times')
-        assert.equal(result[3][0], 0, 'check first unlock amount')
-        assert.equal(result[3][1], 0, 'check second unlock amount')
-        assert.equal(result[3][2], 0, 'check third unlock amount')
+        assert.equal(result[3].toString(), timestamps, 'check unlock times')
+        assert.equal(result[4][0], 0, 'check first unlock amount')
+        assert.equal(result[4][1], 0, 'check second unlock amount')
+        assert.equal(result[4][2], 0, 'check third unlock amount')
     })
 
     it('testing get activation when the blocking amount exceeds the activation amount', async ()=> {
@@ -94,8 +97,9 @@ contract("Testing Synthetic Token", accounts => {
         assert.equal(result[0].toString(), balance, 'check total tokens')
         assert.equal(result[1].toString(), 0, 'check creditable amount')
         assert.equal(result[2].toString(), timestamps.toString(), 'check unlock times')
-        assert.equal(result[3][0].toString(), balance.dividedBy(3).toString(), 'check first unlock amount')
-        assert.equal(result[3][1].toString(), balance.dividedBy(3).toString(), 'check second unlock amount')
-        assert.equal(result[3][2].toString(), balance.dividedBy(3).toString(), 'check third unlock amount')
+        assert.equal(result[3].toString(), timestamps.toString(), 'check unlock times')
+        assert.equal(result[4][0].toString(), balance.dividedBy(3).toString(), 'check first unlock amount')
+        assert.equal(result[4][1].toString(), balance.dividedBy(3).toString(), 'check second unlock amount')
+        assert.equal(result[4][2].toString(), balance.dividedBy(3).toString(), 'check third unlock amount')
     })
 })

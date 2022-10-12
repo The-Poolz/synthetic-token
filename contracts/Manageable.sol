@@ -19,7 +19,8 @@ contract Manageable is ERC20Helper, GovManager{
     uint256 public FinishTime;
 
     struct lockDetails {
-        uint64 unlockTime;
+        uint64 startTime;
+        uint64 finishTime;
         uint ratio;
     }
 
@@ -36,20 +37,25 @@ contract Manageable is ERC20Helper, GovManager{
     function _SetLockingDetails(
         address _tokenAddress,
         uint256 _amount,
-        uint64[] memory _unlockTimes,
+        uint64[] memory _startTimes,
+        uint64[] memory _finishTimes,
         uint8[] memory _ratios,
         uint256 _finishTime
     ) internal tokenReady(false) {
-        require(_unlockTimes.length == _ratios.length, "Both arrays should have same length.");
-        require(_unlockTimes.length > 0, "Array length should be greater than 0");
+        require(
+            _startTimes.length == _ratios.length &&
+                _startTimes.length == _finishTimes.length,
+            "Arrays should have same length."
+        );
+        require(_startTimes.length > 0, "Array length should be greater than 0");
         OriginalTokenAddress = _tokenAddress;
         TransferInToken(_tokenAddress, msg.sender, _amount);
-        for(uint8 i=0; i<_unlockTimes.length ; i++){
-            LockDetails[i] = lockDetails(_unlockTimes[i], _ratios[i]);
+        for(uint8 i=0; i<_startTimes.length ; i++){
+            LockDetails[i] = lockDetails(_startTimes[i], _finishTimes[i], _ratios[i]);
             totalOfRatios += _ratios[i];
         }
         require(totalOfRatios > 0, "Total Of Ratios cannot be Zero");
-        totalUnlocks = uint8(_unlockTimes.length);
+        totalUnlocks = uint8(_startTimes.length);
         FinishTime = _finishTime;
         emit LockingDetails(_tokenAddress, _amount, totalUnlocks, _finishTime);
     }
@@ -69,5 +75,4 @@ contract Manageable is ERC20Helper, GovManager{
         IWhiteList(WhitelistAddress).Register(_address, WhitelistId, _amount);
         return true;
     }
-
 }

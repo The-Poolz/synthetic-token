@@ -23,7 +23,7 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         const now = new Date()
         timestamp.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
-        await token.SetLockingDetails(originalToken.address, timestamp, ratio, finishTime.toString(), { from: firstAddress })
+        await token.SetLockingDetails(originalToken.address, timestamp, timestamp, ratio, finishTime.toString(), { from: firstAddress })
     })
 
     it('get activation result with one timestamp', async () => {
@@ -31,8 +31,9 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         const result = await token.getActivationResult(balance)
         assert.equal(result[0].toString(), balance, 'check total tokens')
         assert.equal(result[1].toString(), 0, 'check creditable amount')
-        assert.equal(result[2][0].toString(), timestamp.toString(), 'check unlock times')
-        assert.equal(result[3][0].toString(), balance, 'check unlock amount')
+        assert.equal(result[2][0].toString(), timestamp.toString(), 'check start times')
+        assert.equal(result[3][0].toString(), timestamp.toString(), 'check finish times')
+        assert.equal(result[4].toString(), balance, 'check balance result')
     })
 
     it('testing get activation in the past time', async () => {
@@ -43,7 +44,7 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         const now = new Date()
         const pastTimestamp = []
         pastTimestamp.push((now.setHours(now.getHours() - 1) / 1000).toFixed())
-        await token.SetLockingDetails(testToken.address, pastTimestamp, [1], finishTime.toString(), { from: secondAddress })
+        await token.SetLockingDetails(testToken.address, pastTimestamp, pastTimestamp, [1], finishTime.toString(), { from: secondAddress })
         const balance = await token.balanceOf(secondAddress)
         const result = await token.getActivationResult(balance)
         assert.equal(result[0].toString(), balance, 'check total tokens')
@@ -57,7 +58,8 @@ contract("Testing Synthetic Token with one timestamp", accounts => {
         assert.equal(result[0].toString(), 0, 'check total tokens')
         assert.equal(result[1].toString(), 0, 'check creditable amount')
         assert.equal(result[2][0].toString(), timestamp.toString(), 'check unlock times')
-        assert.equal(result[3].toString(), 0, 'check unlock amount')
+        assert.equal(result[3][0].toString(), timestamp.toString(), 'check unlock times')
+        assert.equal(result[4].toString(), 0, 'check unlock amount')
     })
 
     it('testing activate synthetic with zero amount', async () => {
