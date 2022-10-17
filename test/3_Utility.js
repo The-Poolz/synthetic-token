@@ -11,35 +11,16 @@ contract("Testing secondary functions", accounts => {
     const lockedDealAddress = accounts[9]
     const zeroAddress = '0x0000000000000000000000000000000000000000'
     const cap = new BigNumber(10000)
-    const timestamps = []
+    let timestamp
     const ratios = [1, 1, 1]
     const finishTime = parseInt(new Date().getTime() / 1000) + 60 * 60
 
     before(async () => {
         originalToken = await TestToken.new('OrgToken', 'ORGT');
         const now = new Date()
-        timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
-        timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
-        timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
+        timestamp = (now.setHours(now.getHours() + 1) / 1000).toFixed()
         token = await Token.new(synthTokenName, tokenSymbol, cap.toString(), decimals, firstAddress, lockedDealAddress, zeroAddress, { from: firstAddress })
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
-    })
-    it('should revert arrays not the same length', async () => {
-        await truffleAssert.reverts(
-            token.SetLockingDetails(originalToken.address, [1], [1, 1], [1, 1], finishTime.toString(), { from: firstAddress }), 'Arrays should have same length')
-        await truffleAssert.reverts(
-            token.SetLockingDetails(originalToken.address, [1, 1], [1], [1, 1], finishTime.toString(), { from: firstAddress }), 'Arrays should have same length')
-    })
-
-    it('should revert empty array', async () => {
-        await truffleAssert.reverts(
-            token.SetLockingDetails(originalToken.address, [], [], [], finishTime.toString(), { from: firstAddress }), 'Array length should be greater than 0')
-    })
-
-    it('should revert second call set locking details', async () => {
-        await token.SetLockingDetails(originalToken.address, timestamps, timestamps, ratios, finishTime.toString(), { from: firstAddress })
-        await truffleAssert.reverts(
-            token.SetLockingDetails(originalToken.address, timestamps, timestamps, ratios, finishTime.toString(), { from: firstAddress }), 'Unlock Data status error')
     })
 
     it('token minting', async () => {

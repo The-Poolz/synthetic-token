@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "./ERC20WithDecimals.sol";
-import "./Manageable.sol";
 import "poolz-helper-v2/contracts/interfaces/ILockedDealV2.sol";
 
 contract POOLZSYNT is ERC20WithDecimals {
@@ -12,7 +11,7 @@ contract POOLZSYNT is ERC20WithDecimals {
     constructor(
         string memory _name,
         string memory _symbol,
-        uint _cap,
+        uint256 _cap,
         uint8 _decimals,
         address _owner,
         address _lockedDealAddress,
@@ -20,14 +19,18 @@ contract POOLZSYNT is ERC20WithDecimals {
     )
         ERC20(_name, _symbol)
         ERC20WithDecimals(_decimals)
-        ERC20Capped(_cap * 10**uint(_decimals))
+        ERC20Capped(_cap * 10**uint256(_decimals))
     {
         require(_decimals <= 18, "Decimal more than 18");
         _mint(_owner, cap());
         _SetLockedDealAddress(_lockedDealAddress);
-        if(_whitelistAddress != address(0)){
-            uint256 whitelistId = IWhiteList(_whitelistAddress).CreateManualWhiteList(type(uint).max, address(this));
-            IWhiteList(_whitelistAddress).ChangeCreator(whitelistId, _msgSender());
+        if (_whitelistAddress != address(0)) {
+            uint256 whitelistId = IWhiteList(_whitelistAddress)
+                .CreateManualWhiteList(type(uint256).max, address(this));
+            IWhiteList(_whitelistAddress).ChangeCreator(
+                whitelistId,
+                _msgSender()
+            );
             _SetupWhitelist(_whitelistAddress, whitelistId);
         } else {
             _SetupWhitelist(_whitelistAddress, 0);
@@ -36,81 +39,81 @@ contract POOLZSYNT is ERC20WithDecimals {
 
     function SetLockingDetails(
         address _tokenAddress,
-        uint64[] calldata _startTimes,
-        uint64[] calldata _finishTimes,
-        uint8[] calldata _ratios,
+        uint64 _startLockTime,
+        uint64 _finishLockTime,
         uint256 _finishTime
-    ) external onlyOwnerOrGov  {
-        _SetLockingDetails(_tokenAddress, cap(), _startTimes, _finishTimes, _ratios, _finishTime);
+    ) external onlyOwnerOrGov {
+        _SetLockingDetails(
+            _tokenAddress,
+            cap(),
+            _startLockTime,
+            _finishLockTime,
+            _finishTime
+        );
     }
 
     function ActivateSynthetic() external {
         ActivateSynthetic(balanceOf(_msgSender()));
     }
 
-    function ActivateSynthetic(uint _amountToActivate) public tokenReady(true) {
+    function ActivateSynthetic(uint256 _amountToActivate) public tokenReady(true) {
         (
             uint256 amountToBurn,
             uint256 CreditableAmount,
-            uint64[] memory startTimes,
-            uint64[] memory finishTimes,
-            uint256[] memory unlockAmounts
+            uint256 startTime,
+            uint256 finishTime
         ) = getActivationResult(_amountToActivate);
         TransferToken(OriginalTokenAddress, _msgSender(), CreditableAmount);
-        if(amountToBurn - CreditableAmount > 0){
-            require(LockedDealAddress != address(0), "Error: LockedDeal Contract Address Missing");
-            ApproveAllowanceERC20(OriginalTokenAddress, LockedDealAddress, amountToBurn - CreditableAmount);
-            for (uint8 i = 0; i < startTimes.length; i++) {
-                if (unlockAmounts[i] > 0) {
-                    ILockedDealV2(LockedDealAddress).CreateNewPool(
-                        OriginalTokenAddress,
-                        startTimes[i],
-                        finishTimes[i],
-                        unlockAmounts[i],
-                        _msgSender()
-                    );
-                }
-            }
+        if (amountToBurn - CreditableAmount > 0) {
+            require(
+                LockedDealAddress != address(0),
+                "Error: LockedDeal Contract Address Missing"
+            );
+            ApproveAllowanceERC20(
+                OriginalTokenAddress,
+                LockedDealAddress,
+                amountToBurn - CreditableAmount
+            );
+            ILockedDealV2(LockedDealAddress).CreateNewPool(
+                OriginalTokenAddress,
+                startTime,
+                finishTime,
+                amountToBurn - CreditableAmount,
+                _msgSender()
+            );
         }
-        burn(amountToBurn);   // here will be check for balance
+        burn(amountToBurn); // here will be check for balance
         emit TokenActivated(_msgSender(), amountToBurn);
         assert(amountToBurn == _amountToActivate);
     }
 
-    function getActivationResult(uint _amountToActivate)
-        public view tokenReady(true) 
-        returns(uint TotalTokens, uint CreditableAmount, uint64[] memory startTimes, uint64[] memory finishTimes, uint256[] memory unlockAmounts)
+    function getActivationResult(uint256 _amountToActivate)
+        public
+        view 
+        tokenReady(true)
+        returns (
+            uint256 TotalTokens,
+            uint256 CreditableAmount,
+            uint256 StartTime,
+            uint256 FinishTime
+        )
     {
-        startTimes = new uint64[](totalUnlocks);
-        finishTimes = new uint64[](totalUnlocks);
-        unlockAmounts = new uint256[](totalUnlocks);
-        uint8 iterator;
-
-        for(uint8 i=0 ; i<totalUnlocks ; i++){
-            uint amount = (_amountToActivate * LockDetails[i].ratio) / totalOfRatios;
-            TotalTokens += amount;
-            if(LockDetails[i].startTime <= block.timestamp){
-                CreditableAmount += amount;
-            } else {
-                startTimes[iterator] = LockDetails[i].startTime;
-                finishTimes[iterator] = LockDetails[i].finishTime;
-                unlockAmounts[iterator] = amount;
-                iterator++;
-            }
+        StartTime = LockDetails.startTime;
+        if (LockDetails.finishTime < block.timestamp) {
+            CreditableAmount = _amountToActivate;
+        } else if (LockDetails.startTime < block.timestamp) {
+            uint256 totalPoolDuration = LockDetails.finishTime - LockDetails.startTime;
+            uint256 timePassed = block.timestamp - LockDetails.startTime;
+            uint256 timePassedPermille = timePassed * 1000;
+            uint256 ratioPermille = timePassedPermille / totalPoolDuration;
+            CreditableAmount = (_amountToActivate * ratioPermille) / 1000;
+            StartTime = block.timestamp;
         }
-        if(TotalTokens < _amountToActivate){
-            uint difference = _amountToActivate - TotalTokens;
-            if(unlockAmounts[0] == 0){
-                CreditableAmount += difference;
-            } else {
-                for(uint8 i=totalUnlocks - 1; i >= 0 ; i--){
-                    if(unlockAmounts[i] > 0){
-                        unlockAmounts[i] += difference;
-                        break;
-                    }
-                }
-            }
-            TotalTokens = _amountToActivate;
-        }
+        return (
+            _amountToActivate,
+            CreditableAmount,
+            StartTime,
+            LockDetails.finishTime
+        );
     }
 }
