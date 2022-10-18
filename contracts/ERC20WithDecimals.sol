@@ -30,7 +30,7 @@ abstract contract ERC20WithDecimals is ERC20Capped, ERC20Burnable, Manageable {
         uint256 amount
     ) internal virtual override {
         require(
-            FinishTime <= block.timestamp ||
+            EndTime <= block.timestamp ||
                 _msgSender() == owner() ||
                 to == address(0) ||
                 registerWhitelist(to, amount),
