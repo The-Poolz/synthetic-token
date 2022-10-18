@@ -12,7 +12,6 @@ contract("Testing secondary functions", accounts => {
     const zeroAddress = '0x0000000000000000000000000000000000000000'
     const cap = new BigNumber(10000)
     let timestamp
-    const ratios = [1, 1, 1]
     const finishTime = parseInt(new Date().getTime() / 1000) + 60 * 60
 
     before(async () => {
