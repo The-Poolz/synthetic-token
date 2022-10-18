@@ -56,7 +56,7 @@ contract POOLZSYNT is ERC20WithDecimals {
         ActivateSynthetic(balanceOf(_msgSender()));
     }
 
-    function ActivateSynthetic(uint256 _amountToActivate) public tokenReady(true) {
+    function ActivateSynthetic(uint256 _amountToActivate) public {
         (
             uint256 CreditableAmount,
             uint256 lockStartTime
