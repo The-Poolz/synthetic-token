@@ -41,14 +41,14 @@ contract POOLZSYNT is ERC20WithDecimals {
         address _tokenAddress,
         uint64 _startLockTime,
         uint64 _finishLockTime,
-        uint256 _finishTime
+        uint256 _endTime
     ) external onlyOwnerOrGov {
         _SetLockingDetails(
             _tokenAddress,
             cap(),
             _startLockTime,
             _finishLockTime,
-            _finishTime
+            _endTime
         );
     }
 
@@ -56,35 +56,35 @@ contract POOLZSYNT is ERC20WithDecimals {
         ActivateSynthetic(balanceOf(_msgSender()));
     }
 
-    function ActivateSynthetic(uint256 _amountToActivate) public tokenReady(true) {
+    function ActivateSynthetic(uint256 _amountToActivate) public {
         (
-            uint256 amountToBurn,
             uint256 CreditableAmount,
-            uint256 startTime,
-            uint256 finishTime
+            uint256 lockStartTime
         ) = getActivationResult(_amountToActivate);
-        TransferToken(OriginalTokenAddress, _msgSender(), CreditableAmount);
-        if (amountToBurn - CreditableAmount > 0) {
+        address _originalTokenAddress = OriginalTokenAddress;
+        address _lockDealAddress = LockedDealAddress;
+        TransferToken(_originalTokenAddress, _msgSender(), CreditableAmount);
+        uint256 amountToLock = _amountToActivate - CreditableAmount;
+        if (amountToLock > 0) {
             require(
-                LockedDealAddress != address(0),
+                _lockDealAddress != address(0),
                 "Error: LockedDeal Contract Address Missing"
             );
             ApproveAllowanceERC20(
-                OriginalTokenAddress,
-                LockedDealAddress,
-                amountToBurn - CreditableAmount
+                _originalTokenAddress,
+                _lockDealAddress,
+                amountToLock
             );
-            ILockedDealV2(LockedDealAddress).CreateNewPool(
-                OriginalTokenAddress,
-                startTime,
-                finishTime,
-                amountToBurn - CreditableAmount,
+            ILockedDealV2(_lockDealAddress).CreateNewPool(
+                _originalTokenAddress,
+                lockStartTime,
+                LockDetails.finishTime,
+                amountToLock,
                 _msgSender()
             );
         }
-        burn(amountToBurn); // here will be check for balance
-        emit TokenActivated(_msgSender(), amountToBurn);
-        assert(amountToBurn == _amountToActivate);
+        burn(_amountToActivate); // here will be check for balance
+        emit TokenActivated(_msgSender(), _amountToActivate);
     }
 
     function getActivationResult(uint256 _amountToActivate)
@@ -92,28 +92,21 @@ contract POOLZSYNT is ERC20WithDecimals {
         view 
         tokenReady(true)
         returns (
-            uint256 TotalTokens,
             uint256 CreditableAmount,
-            uint256 StartTime,
-            uint256 FinishTime
+            uint256 lockStartTime
         )
     {
-        StartTime = LockDetails.startTime;
-        if (LockDetails.finishTime < block.timestamp) {
+        if (LockDetails.finishTime <= block.timestamp) {
             CreditableAmount = _amountToActivate;
-        } else if (LockDetails.startTime < block.timestamp) {
+        } else if (LockDetails.startTime <= block.timestamp) {
             uint256 totalPoolDuration = LockDetails.finishTime - LockDetails.startTime;
             uint256 timePassed = block.timestamp - LockDetails.startTime;
             uint256 timePassedPermille = timePassed * 1000;
             uint256 ratioPermille = timePassedPermille / totalPoolDuration;
             CreditableAmount = (_amountToActivate * ratioPermille) / 1000;
-            StartTime = block.timestamp;
+            lockStartTime = block.timestamp;
+        } else if(block.timestamp < LockDetails.startTime){
+            lockStartTime = LockDetails.startTime;
         }
-        return (
-            _amountToActivate,
-            CreditableAmount,
-            StartTime,
-            LockDetails.finishTime
-        );
     }
 }

@@ -10,7 +10,9 @@ contract Manageable is ERC20Helper, GovManager {
     event LockingDetails(
         address TokenAddress,
         uint256 Amount,
-        uint256 FinishTime
+        uint256 FinishTime,
+        uint64 startLockTime,
+        uint64 finishLockTime
     );
 
     address public OriginalTokenAddress;
@@ -19,7 +21,7 @@ contract Manageable is ERC20Helper, GovManager {
     address public WhitelistAddress;
     uint256 public WhitelistId;
 
-    uint256 public FinishTime;
+    uint256 public EndTime;
 
     bool public LockStatus;
 
@@ -42,14 +44,14 @@ contract Manageable is ERC20Helper, GovManager {
         uint256 _amount,
         uint64 _startLockTime,
         uint64 _finishLockTime,
-        uint256 _finishTime
+        uint256 _endTime
     ) internal tokenReady(false) {
         require(_tokenAddress != address(0), "Token address can't be zero");
         OriginalTokenAddress = _tokenAddress;
         TransferInToken(_tokenAddress, msg.sender, _amount);
         LockDetails = lockDetails(_startLockTime, _finishLockTime);
-        FinishTime = _finishTime;
-        emit LockingDetails(_tokenAddress, _amount, _finishTime);
+        EndTime = _endTime;
+        emit LockingDetails(_tokenAddress, _amount, _endTime, _startLockTime, _finishLockTime);
         LockStatus = true;
     }
 
