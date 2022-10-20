@@ -12,13 +12,16 @@ contract("Testing Synthetic Token", accounts => {
     const decimals = '18'
     const lockedDealAddress = accounts[9]
     const cap = new BigNumber(10000)
-    let timestamp
+    let timestamps = []
+    const ratios = [1, 1, 1]
     const finishTime = parseInt(new Date().getTime() / 1000) + 60 * 60
 
     before(async () => {
         originalToken = await TestToken.new('OrgToken', 'ORGT');
         const now = new Date()
-        timestamp = (now.setHours(now.getHours() + 1) / 1000).toFixed()
+        timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
+        timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
+        timestamps.push((now.setHours(now.getHours() + 1) / 1000).toFixed())
     })
 
     it('should deploy token', async () => {
@@ -35,7 +38,7 @@ contract("Testing Synthetic Token", accounts => {
 
     it('should set locking details', async () => {
         await originalToken.approve(token.address, cap.multipliedBy(10 ** 18).toString(), { from: firstAddress })
-        const tx = await token.SetLockingDetails(originalToken.address, timestamp, timestamp, finishTime.toString(), { from: firstAddress })
+        const tx = await token.SetLockingDetails(originalToken.address, timestamps, timestamps, ratios, finishTime.toString(), { from: firstAddress })
         const originalAddress = tx.logs[3].args.TokenAddress
         const totalAmount = tx.logs[3].args.Amount
         const tokenCap = await token.cap()
@@ -46,11 +49,16 @@ contract("Testing Synthetic Token", accounts => {
     it('verifying locking details', async () => {
         const orgToken = await token.OriginalTokenAddress()
         const finish = await token.EndTime()
-        const details = await token.LockDetails()
+        const Index = await token.Index()
+        assert.equal(Index, timestamps.length)
         assert.equal(orgToken, originalToken.address)
         assert.equal(finishTime.toString(), finish.toString())
-        assert.equal(details.startTime.toString(), timestamp.toString())
-        assert.equal(details.finishTime.toString(), timestamp.toString())
+        for (let i = 0; i < Index; i++) {
+            const details = await token.LockDetails(i)
+            assert.equal(details.startTime.toString(), timestamps[i].toString())
+            assert.equal(details.finishTime.toString(), timestamps[i].toString())
+            assert.equal(details.ratio.toString(), ratios[i].toString())
+        }
     })
 
     it('testing activate synthetic with zero amount', async () => {

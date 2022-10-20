@@ -100,10 +100,11 @@ contract POOLZSYNT is ERC20WithDecimals {
         tokenReady(true)
         returns (
             uint256 CreditableAmount,
-            uint256[] memory lockStartTime,
+            uint256[] memory lockStartTimes,
             uint256[] memory unlockAmounts
         )
     {
+        lockStartTimes = new uint256[](Index);
         unlockAmounts = new uint256[](Index);
         for (uint8 i = 0; i < Index; i++) {
             uint256 amount = (_amountToActivate * LockDetails[0].ratio) / Index;
@@ -117,10 +118,10 @@ contract POOLZSYNT is ERC20WithDecimals {
                 uint256 ratioPermille = timePassedPermille / totalPoolDuration;
                 CreditableAmount += (amount * ratioPermille) / 1000;
                 unlockAmounts[i] = amount - CreditableAmount;
-                lockStartTime[i] = block.timestamp;
+                lockStartTimes[i] = block.timestamp;
             } else if (block.timestamp < LockDetails[i].startTime) {
                 unlockAmounts[i] = amount;
-                lockStartTime[i] = LockDetails[i].startTime;
+                lockStartTimes[i] = LockDetails[i].startTime;
             }
         }
     }
