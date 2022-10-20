@@ -39,8 +39,9 @@ contract POOLZSYNT is ERC20WithDecimals {
 
     function SetLockingDetails(
         address _tokenAddress,
-        uint64 _startLockTime,
-        uint64 _finishLockTime,
+        uint64[] calldata _startLockTime,
+        uint64[] calldata _finishLockTime,
+        uint8[] calldata _ratios,
         uint256 _endTime
     ) external onlyOwnerOrGov {
         _SetLockingDetails(
@@ -48,6 +49,7 @@ contract POOLZSYNT is ERC20WithDecimals {
             cap(),
             _startLockTime,
             _finishLockTime,
+            _ratios,
             _endTime
         );
     }
@@ -59,7 +61,8 @@ contract POOLZSYNT is ERC20WithDecimals {
     function ActivateSynthetic(uint256 _amountToActivate) public {
         (
             uint256 CreditableAmount,
-            uint256 lockStartTime
+            uint256[] memory lockStartTime,
+            uint256[] memory unlockAmounts
         ) = getActivationResult(_amountToActivate);
         address _originalTokenAddress = OriginalTokenAddress;
         address _lockDealAddress = LockedDealAddress;
@@ -75,13 +78,17 @@ contract POOLZSYNT is ERC20WithDecimals {
                 _lockDealAddress,
                 amountToLock
             );
-            ILockedDealV2(_lockDealAddress).CreateNewPool(
-                _originalTokenAddress,
-                lockStartTime,
-                LockDetails.finishTime,
-                amountToLock,
-                _msgSender()
-            );
+            for (uint8 i = 0; i < Index; i++) {
+                if (unlockAmounts[i] > 0) {
+                    ILockedDealV2(_lockDealAddress).CreateNewPool(
+                        _originalTokenAddress,
+                        lockStartTime[i],
+                        LockDetails[i].finishTime,
+                        unlockAmounts[i],
+                        _msgSender()
+                    );
+                }
+            }
         }
         burn(_amountToActivate); // here will be check for balance
         emit TokenActivated(_msgSender(), _amountToActivate);
@@ -89,24 +96,32 @@ contract POOLZSYNT is ERC20WithDecimals {
 
     function getActivationResult(uint256 _amountToActivate)
         public
-        view 
+        view
         tokenReady(true)
         returns (
             uint256 CreditableAmount,
-            uint256 lockStartTime
+            uint256[] memory lockStartTime,
+            uint256[] memory unlockAmounts
         )
     {
-        if (LockDetails.finishTime <= block.timestamp) {
-            CreditableAmount = _amountToActivate;
-        } else if (LockDetails.startTime <= block.timestamp) {
-            uint256 totalPoolDuration = LockDetails.finishTime - LockDetails.startTime;
-            uint256 timePassed = block.timestamp - LockDetails.startTime;
-            uint256 timePassedPermille = timePassed * 1000;
-            uint256 ratioPermille = timePassedPermille / totalPoolDuration;
-            CreditableAmount = (_amountToActivate * ratioPermille) / 1000;
-            lockStartTime = block.timestamp;
-        } else if(block.timestamp < LockDetails.startTime){
-            lockStartTime = LockDetails.startTime;
+        unlockAmounts = new uint256[](Index);
+        for (uint8 i = 0; i < Index; i++) {
+            uint256 amount = (_amountToActivate * LockDetails[0].ratio) / Index;
+            if (LockDetails[i].finishTime <= block.timestamp) {
+                CreditableAmount += amount;
+            } else if (LockDetails[i].startTime <= block.timestamp) {
+                uint256 totalPoolDuration = LockDetails[i].finishTime -
+                    LockDetails[i].startTime;
+                uint256 timePassed = block.timestamp - LockDetails[i].startTime;
+                uint256 timePassedPermille = timePassed * 1000;
+                uint256 ratioPermille = timePassedPermille / totalPoolDuration;
+                CreditableAmount += (amount * ratioPermille) / 1000;
+                unlockAmounts[i] = amount - CreditableAmount;
+                lockStartTime[i] = block.timestamp;
+            } else if (block.timestamp < LockDetails[i].startTime) {
+                unlockAmounts[i] = amount;
+                lockStartTime[i] = LockDetails[i].startTime;
+            }
         }
     }
 }

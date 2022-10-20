@@ -11,8 +11,9 @@ contract Manageable is ERC20Helper, GovManager {
         address TokenAddress,
         uint256 Amount,
         uint256 FinishTime,
-        uint64 startLockTime,
-        uint64 finishLockTime
+        uint64[] startLockTime,
+        uint64[] finishLockTime,
+        uint8[] Ratios
     );
 
     address public OriginalTokenAddress;
@@ -28,9 +29,12 @@ contract Manageable is ERC20Helper, GovManager {
     struct lockDetails {
         uint64 startTime;
         uint64 finishTime;
+        uint ratio;
     }
 
-    lockDetails public LockDetails;
+    mapping(uint8 => lockDetails) public LockDetails;
+
+    uint256 public Index;
 
     modifier tokenReady(bool status) {
         require(
@@ -42,16 +46,23 @@ contract Manageable is ERC20Helper, GovManager {
     function _SetLockingDetails(
         address _tokenAddress,
         uint256 _amount,
-        uint64 _startLockTime,
-        uint64 _finishLockTime,
+        uint64[] memory _startLockTime,
+        uint64[] memory _finishLockTime,
+        uint8[] memory _ratios,
         uint256 _endTime
     ) internal tokenReady(false) {
         require(_tokenAddress != address(0), "Token address can't be zero");
+        require(_startLockTime.length > 0, "Array length should be greater than 0");
+        require(_startLockTime.length == _finishLockTime.length, "Arrays should have same length");
+        require(_finishLockTime.length == _ratios.length, "Arrays should have same length");
         OriginalTokenAddress = _tokenAddress;
         TransferInToken(_tokenAddress, msg.sender, _amount);
-        LockDetails = lockDetails(_startLockTime, _finishLockTime);
+        for(uint8 i = 0; i < _startLockTime.length; i++){
+            LockDetails[i] = lockDetails(_startLockTime[i], _finishLockTime[i], _ratios[i]);
+        }
+        Index = _finishLockTime.length;
         EndTime = _endTime;
-        emit LockingDetails(_tokenAddress, _amount, _endTime, _startLockTime, _finishLockTime);
+        emit LockingDetails(_tokenAddress, _amount, _endTime, _startLockTime, _finishLockTime, _ratios);
         LockStatus = true;
     }
 
