@@ -42,7 +42,7 @@ contract POOLZSYNT is ERC20WithDecimals {
         uint64[] calldata _startLockTime,
         uint64[] calldata _finishLockTime,
         uint8[] calldata _ratios,
-        uint256 _endTime
+        uint64 _endTime
     ) external onlyOwnerOrGov {
         _SetLockingDetails(
             _tokenAddress,
@@ -78,7 +78,7 @@ contract POOLZSYNT is ERC20WithDecimals {
                 _lockDealAddress,
                 amountToLock
             );
-            for (uint8 i = 0; i < Index; i++) {
+            for (uint8 i = 0; i < TotalLocks; i++) {
                 if (lockAmounts[i] > 0) {
                     ILockedDealV2(_lockDealAddress).CreateNewPool(
                         _originalTokenAddress,
@@ -104,25 +104,24 @@ contract POOLZSYNT is ERC20WithDecimals {
             uint256[] memory lockAmounts
         )
     {
-        lockStartTimes = new uint256[](Index);
-        lockAmounts = new uint256[](Index);
-        for (uint8 i = 0; i < Index; i++) {
-            uint256 amount = (_amountToActivate * LockDetails[0].ratio) / Index;
+        lockStartTimes = new uint256[](TotalLocks);
+        lockAmounts = new uint256[](TotalLocks);
+        for (uint8 i = 0; i < TotalLocks; i++) {
+            uint256 amount = (_amountToActivate * LockDetails[i].ratio) / SumOfRatios;
             if (LockDetails[i].finishTime <= block.timestamp) {
                 CreditableAmount += amount;
             } else if (LockDetails[i].startTime <= block.timestamp) {
-            uint256 totalPoolDuration = LockDetails[i].finishTime -
-                     LockDetails[i].startTime;
-            uint256 timePassed = block.timestamp - LockDetails[i].startTime;
-            uint256 timePassedPermille = timePassed * 1000;
-            uint256 ratioPermille = timePassedPermille / totalPoolDuration;
-            uint256 debitableAmount = (amount * ratioPermille) / 1000; 
-            CreditableAmount += debitableAmount;
-            lockAmounts[i] = amount - debitableAmount;
-            lockStartTimes[i] = block.timestamp;
-             } else if (block.timestamp < LockDetails[i].startTime) {
-                lockAmounts[i] = amount;
+                uint256 totalPoolDuration = LockDetails[i].finishTime - LockDetails[i].startTime;
+                uint256 timePassed = block.timestamp - LockDetails[i].startTime;
+                uint256 timePassedPermille = timePassed * 1000;
+                uint256 ratioPermille = timePassedPermille / totalPoolDuration;
+                uint256 _creditableAmount = (amount * ratioPermille) / 1000; 
+                CreditableAmount += _creditableAmount;
+                lockStartTimes[i] = block.timestamp;
+                lockAmounts[i] = amount - _creditableAmount;
+            } else if (block.timestamp < LockDetails[i].startTime) {
                 lockStartTimes[i] = LockDetails[i].startTime;
+                lockAmounts[i] = amount;
             }
         }
     }

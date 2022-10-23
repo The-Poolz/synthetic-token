@@ -49,11 +49,11 @@ contract("Testing Synthetic Token", accounts => {
     it('verifying locking details', async () => {
         const orgToken = await token.OriginalTokenAddress()
         const finish = await token.EndTime()
-        const Index = await token.Index()
-        assert.equal(Index, timestamps.length)
+        const TotalLocks = await token.TotalLocks()
+        assert.equal(TotalLocks, timestamps.length)
         assert.equal(orgToken, originalToken.address)
         assert.equal(finishTime.toString(), finish.toString())
-        for (let i = 0; i < Index; i++) {
+        for (let i = 0; i < TotalLocks; i++) {
             const details = await token.LockDetails(i)
             assert.equal(details.startTime.toString(), timestamps[i].toString())
             assert.equal(details.finishTime.toString(), timestamps[i].toString())
