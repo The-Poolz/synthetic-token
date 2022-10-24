@@ -62,7 +62,7 @@ contract("Testing Synthetic Token", accounts => {
     })
 
     it('testing activate synthetic with zero amount', async () => {
-        const event = await token.ActivateSynthetic(0)
+        const event = await token.WithdrawToken(0)
         assert.equal(event.logs[3].args.Owner, firstAddress)
         assert.equal(event.logs[3].args.Amount, 0)
     })

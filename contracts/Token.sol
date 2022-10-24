@@ -54,25 +54,21 @@ contract POOLZSYNT is ERC20WithDecimals {
         );
     }
 
-    function ActivateSynthetic() external {
-        ActivateSynthetic(balanceOf(_msgSender()));
+    function WithdrawToken() external {
+        WithdrawToken(balanceOf(_msgSender()));
     }
 
-    function ActivateSynthetic(uint256 _amountToActivate) public {
+    function WithdrawToken(uint256 _amountToActivate) public {
         (
             uint256 CreditableAmount,
             uint256[] memory lockStartTime,
             uint256[] memory lockAmounts
-        ) = getActivationResult(_amountToActivate);
+        ) = getWithdrawableAmount(_amountToActivate);
         address _originalTokenAddress = OriginalTokenAddress;
         address _lockDealAddress = LockedDealAddress;
         TransferToken(_originalTokenAddress, _msgSender(), CreditableAmount);
         uint256 amountToLock = _amountToActivate - CreditableAmount;
         if (amountToLock > 0) {
-            require(
-                _lockDealAddress != address(0),
-                "Error: LockedDeal Contract Address Missing"
-            );
             ApproveAllowanceERC20(
                 _originalTokenAddress,
                 _lockDealAddress,
@@ -94,7 +90,7 @@ contract POOLZSYNT is ERC20WithDecimals {
         emit TokenActivated(_msgSender(), _amountToActivate);
     }
 
-    function getActivationResult(uint256 _amountToActivate)
+    function getWithdrawableAmount(uint256 _amountToActivate)
         public
         view
         tokenReady(true)

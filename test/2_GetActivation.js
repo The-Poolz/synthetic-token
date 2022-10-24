@@ -44,7 +44,7 @@ contract("Testing getActivationResult", (accounts) => {
 
     it("get activation result", async () => {
         const balance = await token.balanceOf(firstAddress)
-        const result = await token.getActivationResult(balance)
+        const result = await token.getWithdrawableAmount(balance)
         assert.equal(result[0].toString(), 0, "check creditable amount")
         assert.equal(result[1][0].toString(), timestamps[0].toString(), "check lock times")
         assert.equal(result[2][0].toString(), balance / timestamps.length, "check lock amount")
@@ -52,7 +52,7 @@ contract("Testing getActivationResult", (accounts) => {
 
     it("testing get activation when the blocking amount exceeds the activation amount", async () => {
         const balance = BigNumber.sum(new BigNumber(1000).multipliedBy(10 ** 18).toString(), -1)
-        const result = await token.getActivationResult(balance)
+        const result = await token.getWithdrawableAmount(balance)
         assert.equal(result[0].toString(), 0, "check creditable amount")
         assert.equal(result[1][0].toString(), timestamps[0].toString(), "check lock times")
         assert.equal(result[2][0].toString(), balance / timestamps.length, "check lock amount")
@@ -80,14 +80,14 @@ contract("Testing getActivationResult", (accounts) => {
             from: secondAddress
         })
         const balance = await token.balanceOf(secondAddress)
-        const result = await token.getActivationResult(balance)
+        const result = await token.getWithdrawableAmount(balance)
         assert.equal(result[0].toString(), balance, "check creditable amount")
         assert.equal(result[1][0].toString(), 0, "check lock time")
         assert.equal(result[2][0].toString(), 0, "check lock amount")
     })
 
     it("testing get activation with zero amount", async () => {
-        const result = await token.getActivationResult(0)
+        const result = await token.getWithdrawableAmount(0)
         assert.equal(result[0].toString(), 0, "check creditable amount")
         assert.equal(result[1][0].toString(), timestamps[0].toString(), "check lock times")
         assert.equal(result[2][0].toString(), 0, "check lock amount")
@@ -121,7 +121,7 @@ contract("Testing getActivationResult", (accounts) => {
         const halfYear = Math.floor(date.getTime() / 1000)
         await timeMachine.advanceBlockAndSetTime(halfYear)
         const balance = await token.balanceOf(accounts[0])
-        const result = await token.getActivationResult(balance)
+        const result = await token.getWithdrawableAmount(balance)
         assert.equal(result[0].toString(), balance / 2, "check balance")
         for (let i = 0; i < finishTimes.length; i++) {
             assert.equal(result[1][i], halfYear.toString(), "check start time")
