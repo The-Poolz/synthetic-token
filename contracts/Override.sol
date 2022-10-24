@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./Manageable.sol";
 
-abstract contract ERC20WithDecimals is ERC20Capped, ERC20Burnable, Manageable {
+abstract contract Override is ERC20Capped, ERC20Burnable, Manageable {
     uint8 private immutable _decimals;
 
     constructor(uint8 decimals_) {

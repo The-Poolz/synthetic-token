@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "./ERC20WithDecimals.sol";
+import "./Override.sol";
 import "poolz-helper-v2/contracts/interfaces/ILockedDealV2.sol";
 
-contract POOLZSYNT is ERC20WithDecimals {
+contract POOLZSYNT is Override {
     event TokenActivated(address Owner, uint256 Amount);
 
     constructor(
@@ -18,7 +18,7 @@ contract POOLZSYNT is ERC20WithDecimals {
         address _whitelistAddress
     )
         ERC20(_name, _symbol)
-        ERC20WithDecimals(_decimals)
+        Override(_decimals)
         ERC20Capped(_cap * 10**uint256(_decimals))
     {
         require(_decimals <= 18, "Decimal more than 18");
