@@ -55,10 +55,10 @@ contract POOLZSYNT is Override {
     }
 
     function WithdrawToken() external {
-        WithdrawToken(balanceOf(_msgSender()));
+        ActivateSynthetic(balanceOf(_msgSender()));
     }
 
-    function WithdrawToken(uint256 _amountToActivate) public {
+    function ActivateSynthetic(uint256 _amountToActivate) public {
         (
             uint256 CreditableAmount,
             uint256[] memory lockStartTime,
