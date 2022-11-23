@@ -104,7 +104,8 @@ contract POOLZSYNT is Override {
         lockStartTimes = new uint256[](TotalLocks);
         lockAmounts = new uint256[](TotalLocks);
         for (uint8 i = 0; i < TotalLocks; i++) {
-            uint256 amount = (_amountToActivate * LockDetails[i].ratio) / SumOfRatios;
+            uint256 amount = (_amountToActivate * LockDetails[i].ratio) /
+                SumOfRatios;
             if (LockDetails[i].finishTime <= block.timestamp) {
                 CreditableAmount += amount;
             } else if (LockDetails[i].startTime <= block.timestamp) {
@@ -112,7 +113,7 @@ contract POOLZSYNT is Override {
                 uint256 timePassed = block.timestamp - LockDetails[i].startTime;
                 uint256 timePassedPermille = timePassed * 1000;
                 uint256 ratioPermille = timePassedPermille / totalPoolDuration;
-                uint256 _creditableAmount = (amount * ratioPermille) / 1000; 
+                uint256 _creditableAmount = (amount * ratioPermille) / 1000;
                 CreditableAmount += _creditableAmount;
                 lockStartTimes[i] = block.timestamp;
                 lockAmounts[i] = amount - _creditableAmount;
@@ -122,12 +123,12 @@ contract POOLZSYNT is Override {
             }
         }
         uint256 lockedAmount = Array.getArraySum(lockAmounts);
-        if (lockedAmount + CreditableAmount < _amountToActivate){
+        if (lockedAmount + CreditableAmount < _amountToActivate) {
             uint256 difference = _amountToActivate - (lockedAmount + CreditableAmount);
-            if(lockAmounts[0] == 0) {
+            if (lockedAmount == 0) {
                 CreditableAmount += difference;
             } else {
-                for (uint8 i = TotalLocks - 1; i >= 0 ; i--) {
+                for (uint8 i = 0; i < TotalLocks; i++) {
                     if (lockAmounts[i] > 0) {
                         lockAmounts[i] += difference;
                         break;
