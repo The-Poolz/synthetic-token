@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./Override.sol";
 import "poolz-helper-v2/contracts/interfaces/ILockedDealV2.sol";
+import "poolz-helper-v2/contracts/Array.sol";
 
 contract POOLZSYNT is Override {
     event TokenActivated(address Owner, uint256 Amount);
@@ -120,5 +121,10 @@ contract POOLZSYNT is Override {
                 lockAmounts[i] = amount;
             }
         }
+        // uint256 lockedAmount = Array.getArraySum(lockAmounts);
+        // if (lockedAmount + CreditableAmount < _amountToActivate){
+        //     //uint256 difference = _amountToActivate - (lockedAmount + CreditableAmount);
+        //     //CreditableAmount == 0 ? lockAmounts[0] += difference : CreditableAmount += difference;
+        // }
     }
 }
