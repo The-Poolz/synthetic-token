@@ -83,7 +83,7 @@ contract("Testing getActivationResult", (accounts) => {
         })
         const balance = await token.balanceOf(secondAddress)
         const result = await token.getWithdrawableAmount(balance)
-        //assert.equal(result[0].toString(), balance.toString(), "check creditable amount")
+        assert.equal(result[0].toString(), balance.toString(), "check creditable amount")
         assert.equal(result[1][0].toString(), 0, "check lock time")
         assert.equal(result[2][0].toString(), 0, "check lock amount")
     })
@@ -118,10 +118,11 @@ contract("Testing getActivationResult", (accounts) => {
             constants.ZERO_ADDRESS
         )
         await testToken.approve(token.address, cap.multipliedBy(10 ** 18).toString())
+        await timeMachine.advanceBlockAndSetTime(startTime)
         await token.SetLockingDetails(testToken.address, startTimes, finishTimes, ratios, 0)
         date.setDate(date.getDate() - year / 2)
-        const halfYear = Math.floor(date.getTime() / 1000)
-        await timeMachine.advanceBlockAndSetTime(halfYear)
+        const halfYear = startTime + (finishTime - startTime) / 2
+        await timeMachine.advanceBlockAndSetTime(startTime + (finishTime - startTime) / 2)
         const balance = await token.balanceOf(accounts[0])
         const result = await token.getWithdrawableAmount(balance)
         assert.equal(result[0].toString(), balance / 2, "check balance")

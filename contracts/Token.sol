@@ -121,10 +121,19 @@ contract POOLZSYNT is Override {
                 lockAmounts[i] = amount;
             }
         }
-        // uint256 lockedAmount = Array.getArraySum(lockAmounts);
-        // if (lockedAmount + CreditableAmount < _amountToActivate){
-        //     //uint256 difference = _amountToActivate - (lockedAmount + CreditableAmount);
-        //     //CreditableAmount == 0 ? lockAmounts[0] += difference : CreditableAmount += difference;
-        // }
+        uint256 lockedAmount = Array.getArraySum(lockAmounts);
+        if (lockedAmount + CreditableAmount < _amountToActivate){
+            uint256 difference = _amountToActivate - (lockedAmount + CreditableAmount);
+            if(lockAmounts[0] == 0) {
+                CreditableAmount += difference;
+            } else {
+                for (uint8 i = TotalLocks - 1; i >= 0 ; i--) {
+                    if (lockAmounts[i] > 0) {
+                        lockAmounts[i] += difference;
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
