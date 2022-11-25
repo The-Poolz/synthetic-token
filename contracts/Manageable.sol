@@ -48,7 +48,7 @@ contract Manageable is ERC20Helper, GovManager {
         uint64[] calldata _startLockTime,
         uint64[] calldata _finishLockTime,
         uint8[] calldata _ratios,
-        uint64 _endTime
+        uint64 _endTime  //Need to be 0 - until duch sale
     ) internal tokenReady(false) {
         require(_tokenAddress != address(0), "Token address can't be zero");
         require(_startLockTime.length > 0, "Array length should be greater than 0");
